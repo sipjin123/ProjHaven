@@ -224,3 +224,8 @@ Content/Developers/Burlin/TestModels/PlaceholderWisp/SquidGhost/Textures/SquidGh
 Content/Developers/Burlin/TestModels/PlaceholderWisp/Wisplant/Materials/Wisplant_material_0.uasset
 Content/Developers/Burlin/TestModels/PlaceholderWisp/Wisplant/StaticMeshes/Wisplant.uasset
 Content/Developers/Burlin/TestModels/PlaceholderWisp/Wisplant/Textures/Wisplant_texture_0.uasset
+ScrapHaven/DerivedDataCache/
+ScrapHaven/Intermediate/
+ScrapHaven/Saved/
+ScrapHaven/Binaries/
+ScrapHaven/.idea/
