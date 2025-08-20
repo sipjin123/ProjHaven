@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Data/FStoreItem.h"
 #include "ShelfManagerComponent.generated.h"
 
 class UBoxComponent;
@@ -30,7 +31,7 @@ public:
 
 	/** Initialize shelf slots based on shelf and item sizes */
 	UFUNCTION(BlueprintCallable, Category="Shelf")
-	void InitializeShelf(UBoxComponent* ShelfBox, UBoxComponent* ItemBox);
+	void InitializeShelf(UBoxComponent* ShelfBox, UBoxComponent* ItemBox, AShelfSector* ShelfSector, const FStoreItem& StoreItemRef);
 
 	/** Place an item in the next free slot */
 	UFUNCTION(BlueprintCallable, Category="Shelf")
@@ -39,7 +40,6 @@ public:
 	/** Reset shelf slots */
 	UFUNCTION(BlueprintCallable, Category="Shelf")
 	void ClearShelf();
-
 protected:
 	UPROPERTY()
 	UBoxComponent* ShelfReference;

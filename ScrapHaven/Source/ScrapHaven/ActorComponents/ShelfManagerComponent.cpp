@@ -2,17 +2,20 @@
 
 #include "DrawDebugHelpers.h"
 #include "Components/BoxComponent.h"
+#include "Data/FStoreItem.h"
 #include "GameFramework/Actor.h"
+#include "Shopping/ShelfSector.h"
 
 UShelfManagerComponent::UShelfManagerComponent()
 {
     PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxComponent* ItemBox)
+void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxComponent* ItemBox, AShelfSector* ShelfSector, const FStoreItem& StoreItemRef)
 {
-    if (!ShelfBox || !ItemBox) return;
+    if (!ShelfBox || !ItemBox || !ShelfSector) return;
 
+    ShelfSector->StoreItemRefData = StoreItemRef;
     ShelfReference = ShelfBox;
     ItemReference  = ItemBox;
 
@@ -69,63 +72,6 @@ void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxCompon
             }
         }
     }
-    /*
-   if (!ShelfBox || !ItemBox) return;
-
-    ShelfReference = ShelfBox;
-    ItemReference  = ItemBox;
-
-    // Shelf: local extents + world(abs) scale
-    const FVector ShelfLocalExtent = ShelfBox->GetUnscaledBoxExtent();
-    const FVector ShelfScaleAbs    = ShelfBox->GetComponentTransform().GetScale3D().GetAbs();
-    const FVector ShelfWorldExtent = ShelfLocalExtent * ShelfScaleAbs;
-
-    // Item: world extents
-    const FVector ItemWorldExtent =
-        ItemBox->GetUnscaledBoxExtent() * ItemBox->GetComponentTransform().GetScale3D().GetAbs();
-
-    // How many fit (use WORLD sizes)
-    ItemsPerRow    = FMath::Max(1, FMath::FloorToInt((ShelfWorldExtent.X * 2.f) / (ItemWorldExtent.X * 2.f)));
-    ItemsPerColumn = FMath::Max(1, FMath::FloorToInt((ShelfWorldExtent.Y * 2.f) / (ItemWorldExtent.Y * 2.f)));
-    MaxLayers      = FMath::Max(1, FMath::FloorToInt((ShelfWorldExtent.Z * 2.f) / (ItemWorldExtent.Z * 2.f)));
-
-    Slots.Empty();
-
-    const FTransform BoxXform = ShelfBox->GetComponentTransform();
-
-    auto SafeDiv = [](float n, float d) { return (d != 0.f) ? (n / d) : 0.f; };
-
-    // Convert item WORLD half/step to LOCAL shelf space (divide by shelf scale per axis)
-    const FVector InsetLocal(
-        SafeDiv(ItemWorldExtent.X, ShelfScaleAbs.X),
-        SafeDiv(ItemWorldExtent.Y, ShelfScaleAbs.Y),
-        SafeDiv(ItemWorldExtent.Z, ShelfScaleAbs.Z));
-
-    const FVector StepLocal(
-        SafeDiv(ItemWorldExtent.X * 2.f, ShelfScaleAbs.X),
-        SafeDiv(ItemWorldExtent.Y * 2.f, ShelfScaleAbs.Y),
-        SafeDiv(ItemWorldExtent.Z * 2.f, ShelfScaleAbs.Z));
-
-    // Anchor: back-bottom-left inside the box
-    const FVector StartLocal = -ShelfLocalExtent + InsetLocal;
-
-    for (int32 Layer = 0; Layer < MaxLayers; ++Layer)
-    {
-        for (int32 Row = 0; Row < ItemsPerRow; ++Row)      // X axis
-        {
-            for (int32 Col = 0; Col < ItemsPerColumn; ++Col) // Y axis
-            {
-                const FVector LocalPos = StartLocal + FVector(Row * StepLocal.X,
-                                                              Col * StepLocal.Y,
-                                                              Layer * StepLocal.Z);
-
-                FItemSlot NewSlot;
-                NewSlot.WorldLocation = BoxXform.TransformPosition(LocalPos);
-                Slots.Add(NewSlot);
-            }
-        }
-    }
-    */
     DrawDebugBox(GetWorld(), ShelfBox->GetComponentLocation(), ShelfLocalExtent, ShelfBox->GetComponentQuat(), FColor::Yellow, false, 10.f);
     for (const auto& S : Slots) DrawDebugPoint(GetWorld(), S.WorldLocation, 8.f, FColor::Green, false, 10.f);
 }
