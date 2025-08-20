@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/FStoreItem.h"
 #include "GameFramework/Actor.h"
 #include "ShopItem.generated.h"
 
@@ -22,5 +23,12 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	
+	// Row name in the Store DataTable
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Store")
+	FName StoreItemRow;
 
+	// Actual resolved data
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Store")
+	FStoreItem StoreItem;
 };

@@ -3,6 +3,8 @@
 
 #include "Shopping/ShopItem.h"
 
+#include "Subsystems/StoreSubsystem.h"
+
 // Sets default values
 AShopItem::AShopItem()
 {
@@ -11,17 +13,25 @@ AShopItem::AShopItem()
 
 }
 
-// Called when the game starts or when spawned
 void AShopItem::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (UStoreSubsystem* StoreSubsystem = GetGameInstance()->GetSubsystem<UStoreSubsystem>())
+	{
+		if (StoreSubsystem->ItemDataTable && StoreItemRow != NAME_None)
+		{
+			FStoreItem* Found = StoreSubsystem->ItemDataTable->FindRow<FStoreItem>(StoreItemRow, TEXT("AShopItem Lookup"));
+			if (Found)
+			{
+				StoreItem = *Found; // copy into our instance
+			}
+		}
+	}
 }
 
 // Called every frame
 void AShopItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
-
