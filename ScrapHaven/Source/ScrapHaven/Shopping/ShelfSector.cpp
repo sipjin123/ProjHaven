@@ -34,6 +34,6 @@ void AShelfSector::InitializeShelf(FVector NewInteractionCoord)
 
 void AShelfSector::RegisterStoreItem(const FStoreItem& StoreItemRef)
 {
-	StoreItemRefData = StoreItemRefData;
+	StoreItemRefData = StoreItemRef;
 }
 
