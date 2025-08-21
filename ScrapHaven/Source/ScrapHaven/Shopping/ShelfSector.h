@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ShopInteractable.h"
+#include "ActorComponents/ShelfManagerComponent.h"
 #include "Data/FStoreItem.h"
 #include "GameFramework/Actor.h"
 #include "ShelfSector.generated.h"
@@ -24,9 +26,21 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable)
+	void InitializeShelf(FVector NewInteractionCoord);
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Store")
 	FStoreItem StoreItemRefData;
 
 	UFUNCTION(BlueprintCallable)
 	void RegisterStoreItem(const FStoreItem& StoreItemRef);
+
+	UFUNCTION(BlueprintCallable)
+	AShopInteractable* ShelfReference() const { return Cast<AShopInteractable>(GetParentActor()); }
+
+	UPROPERTY(BlueprintReadWrite)
+	FVector InteractionCoordinate;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Shelf")
+	UShelfManagerComponent* ShelfManager;
 };

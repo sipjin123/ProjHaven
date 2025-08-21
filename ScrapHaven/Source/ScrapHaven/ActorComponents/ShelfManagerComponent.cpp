@@ -86,6 +86,7 @@ bool UShelfManagerComponent::PlaceItemInNextSlot(AActor* ItemActor)
         {
             ItemActor->SetActorLocation(Slot.WorldLocation);
             Slot.bOccupied = true;
+            Slot.OccupyingItem = ItemActor;
             return true;
         }
     }
@@ -99,4 +100,42 @@ void UShelfManagerComponent::ClearShelf()
     {
         Slot.bOccupied = false;
     }
+}
+
+AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
+{
+    if (Slots.IsValidIndex(SlotIndex))
+    {
+        FItemSlot& Slot = Slots[SlotIndex];
+        if (Slot.bOccupied && Slot.OccupyingItem.IsValid())
+        {
+            AActor* Item = Slot.OccupyingItem.Get();
+
+            // Free the slot
+            Slot.bOccupied = false;
+            Slot.OccupyingItem = nullptr;
+
+            return Item; // Caller now owns the item reference
+        }
+    }
+    return nullptr; // No valid item
+}
+
+AActor* UShelfManagerComponent::TakeLastItem()
+{
+    for (int32 i = Slots.Num() - 1; i >= 0; --i) // iterate backwards
+    {
+        FItemSlot& Slot = Slots[i];
+        if (Slot.bOccupied && Slot.OccupyingItem.IsValid())
+        {
+            AActor* Item = Slot.OccupyingItem.Get();
+
+            // Free the slot
+            Slot.bOccupied = false;
+            Slot.OccupyingItem = nullptr;
+
+            return Item; // Return the item reference
+        }
+    }
+    return nullptr; // No items found
 }

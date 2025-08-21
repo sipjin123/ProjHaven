@@ -19,6 +19,10 @@ struct FItemSlot
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bOccupied = false;
+	
+	// The actor currently in this slot
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TWeakObjectPtr<AActor> OccupyingItem;
 };
 
 UCLASS(Blueprintable, BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,6 +30,19 @@ class SCRAPHAVEN_API UShelfManagerComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
+protected:
+	UPROPERTY()
+	UBoxComponent* ShelfReference;
+
+	UPROPERTY()
+	UBoxComponent* ItemReference;
+
+	UPROPERTY()
+	TArray<FItemSlot> Slots;
+
+	int32 ItemsPerRow = 1;
+	int32 ItemsPerColumn = 1;
+	int32 MaxLayers = 1;
 public:	
 	UShelfManagerComponent();
 
@@ -40,17 +57,20 @@ public:
 	/** Reset shelf slots */
 	UFUNCTION(BlueprintCallable, Category="Shelf")
 	void ClearShelf();
-protected:
-	UPROPERTY()
-	UBoxComponent* ShelfReference;
 
-	UPROPERTY()
-	UBoxComponent* ItemReference;
-
-	UPROPERTY()
-	TArray<FItemSlot> Slots;
-
-	int32 ItemsPerRow = 1;
-	int32 ItemsPerColumn = 1;
-	int32 MaxLayers = 1;
+	UFUNCTION(BlueprintCallable, Category="Shelf")
+	AActor* TakeItem(int32 SlotIndex);
+	
+	UFUNCTION(BlueprintCallable)
+	AActor* TakeLastItem();
+	
+	// Free a slot (when item is removed)
+	UFUNCTION(BlueprintCallable, Category="Shelf")
+	void FreeSlot(int32 SlotIndex)
+	{
+		if (Slots.IsValidIndex(SlotIndex))
+		{
+			Slots[SlotIndex].bOccupied = false;
+		}
+	}
 };

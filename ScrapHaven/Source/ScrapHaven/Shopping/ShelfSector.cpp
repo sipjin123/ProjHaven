@@ -3,6 +3,8 @@
 
 #include "Shopping/ShelfSector.h"
 
+#include "ActorComponents/ShelfManagerComponent.h"
+
 // Sets default values
 AShelfSector::AShelfSector()
 {
@@ -15,7 +17,7 @@ AShelfSector::AShelfSector()
 void AShelfSector::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ShelfManager = FindComponentByClass<UShelfManagerComponent>();
 }
 
 // Called every frame
@@ -23,6 +25,11 @@ void AShelfSector::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AShelfSector::InitializeShelf(FVector NewInteractionCoord)
+{
+	InteractionCoordinate = NewInteractionCoord;
 }
 
 void AShelfSector::RegisterStoreItem(const FStoreItem& StoreItemRef)
