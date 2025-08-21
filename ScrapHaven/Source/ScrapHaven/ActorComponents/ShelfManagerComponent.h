@@ -75,5 +75,14 @@ public:
 	}
 
 	UPROPERTY(BlueprintReadWrite)
-	int32 TotalItems = 0;	
+	int32 TotalItems = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	float BasePrice = 0;
+	
+	UPROPERTY(BlueprintReadWrite)
+	float AssignedPrice = 0;
+
+	UFUNCTION(BlueprintCallable)
+	void AddPriceValue(float PriceIncrement);
 };

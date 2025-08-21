@@ -19,6 +19,10 @@ void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxCompon
     ShelfReference = ShelfBox;
     ItemReference  = ItemBox;
 
+    // Price assignment
+    AssignedPrice = StoreItemRef.BuyPrice;
+    BasePrice = AssignedPrice;
+    
     // Shelf extents
     const FVector ShelfLocalExtent = ShelfBox->GetUnscaledBoxExtent();
     const FVector ShelfScaleAbs    = ShelfBox->GetComponentTransform().GetScale3D().GetAbs();
@@ -139,4 +143,9 @@ AActor* UShelfManagerComponent::TakeLastItem()
         }
     }
     return nullptr; // No items found
+}
+
+void UShelfManagerComponent::AddPriceValue(float PriceIncrement)
+{
+    AssignedPrice += PriceIncrement;
 }

@@ -43,11 +43,11 @@ public:
 
 	/** Base buy price in the shop */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Economy", meta=(ClampMin="0"))
-	int32 BuyPrice = 0;
+	float BuyPrice = 0;
 
 	/** Base sell price if player sells back */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Economy", meta=(ClampMin="0"))
-	int32 SellPrice = 0;
+	float SellPrice = 0;
 
 	/** Whether the item can stack (e.g. food, materials) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
