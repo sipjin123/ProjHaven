@@ -73,4 +73,7 @@ public:
 			Slots[SlotIndex].bOccupied = false;
 		}
 	}
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 TotalItems = 0;	
 };

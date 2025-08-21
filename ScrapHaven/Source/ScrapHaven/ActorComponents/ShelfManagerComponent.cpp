@@ -87,6 +87,7 @@ bool UShelfManagerComponent::PlaceItemInNextSlot(AActor* ItemActor)
             ItemActor->SetActorLocation(Slot.WorldLocation);
             Slot.bOccupied = true;
             Slot.OccupyingItem = ItemActor;
+            TotalItems++;
             return true;
         }
     }
@@ -114,7 +115,7 @@ AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
             // Free the slot
             Slot.bOccupied = false;
             Slot.OccupyingItem = nullptr;
-
+            TotalItems--;
             return Item; // Caller now owns the item reference
         }
     }
@@ -133,7 +134,7 @@ AActor* UShelfManagerComponent::TakeLastItem()
             // Free the slot
             Slot.bOccupied = false;
             Slot.OccupyingItem = nullptr;
-
+            TotalItems--;
             return Item; // Return the item reference
         }
     }
