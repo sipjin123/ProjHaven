@@ -85,4 +85,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void AddPriceValue(float PriceIncrement);
+	
+	UFUNCTION(BlueprintCallable, Category="Shelf")
+	bool PlaceStoreItemDataInNextSlot(const FStoreItem& StoreItem);
 };

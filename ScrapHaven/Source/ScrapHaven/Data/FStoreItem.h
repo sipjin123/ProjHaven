@@ -60,4 +60,7 @@ public:
 	/** If item modifies citizen needs (e.g. food reduces hunger, medicine restores health) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects")
 	FCitizenAttributes AttributeEffect;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
+	TSubclassOf<class AShopItem> ItemActorClass; // 🔹 Class to spawn in world
 };

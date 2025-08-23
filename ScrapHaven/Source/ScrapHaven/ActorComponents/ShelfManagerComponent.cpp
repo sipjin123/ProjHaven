@@ -5,6 +5,7 @@
 #include "Data/FStoreItem.h"
 #include "GameFramework/Actor.h"
 #include "Shopping/ShelfSector.h"
+#include "Shopping/ShopItem.h"
 
 UShelfManagerComponent::UShelfManagerComponent()
 {
@@ -148,4 +149,62 @@ AActor* UShelfManagerComponent::TakeLastItem()
 void UShelfManagerComponent::AddPriceValue(float PriceIncrement)
 {
     AssignedPrice += PriceIncrement;
+}
+
+bool UShelfManagerComponent::PlaceStoreItemDataInNextSlot(const FStoreItem& StoreItem)
+{
+    if (TotalItems == 0)
+    {
+        // Try to auto-initialize using the item’s box
+        if (StoreItem.ItemActorClass)
+        {
+            AShelfSector* ShelfRef = Cast<AShelfSector>(GetOwner());
+            // Spawn a temporary instance to grab its collision box
+            AActor* TempActor = GetWorld()->SpawnActor<AActor>(StoreItem.ItemActorClass, FVector::ZeroVector, FRotator::ZeroRotator);
+            if (TempActor)
+            {
+                UBoxComponent* ItemBox = TempActor->FindComponentByClass<UBoxComponent>();
+                UBoxComponent* ShelfBox = ShelfRef->FindComponentByClass<UBoxComponent>();
+                if (ShelfBox && ItemBox)
+                {
+                    InitializeShelf(ShelfBox, ItemBox, Cast<AShelfSector>(GetOwner()), StoreItem);
+                }
+                TempActor->Destroy();
+            }
+        }
+    }
+
+    if (Slots.Num() == 0)
+    {
+        UE_LOG(LogTemp, Error, TEXT("❌ Shelf still has 0 slots even after trying to init!"));
+        return false;
+    }
+
+    // ✅ Continue with your placement logic...
+    for (int32 i = 0; i < Slots.Num(); i++)
+    {
+        FItemSlot& Slot = Slots[i];
+        if (!Slot.bOccupied)
+        {
+            FActorSpawnParameters Params;
+            Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+            AActor* SpawnedItem = GetWorld()->SpawnActor<AActor>(
+                StoreItem.ItemActorClass,
+                Slot.WorldLocation,
+                FRotator::ZeroRotator,
+                Params
+            );
+
+            if (SpawnedItem)
+            {
+                Slot.bOccupied = true;
+                Slot.OccupyingItem = SpawnedItem;
+                TotalItems++;
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

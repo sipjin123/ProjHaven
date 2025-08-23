@@ -26,10 +26,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Inventory")
 	FStoreItem CachedItem;
 
-	/** How many items are currently inside */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Inventory")
-	int32 Quantity = 0;
-
 public:
 	/** Visual mesh for the box (can be swapped in BP) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
@@ -70,4 +66,8 @@ public:
 	/** Get the cached item type for this box */
 	UFUNCTION(BlueprintPure, Category="Inventory")
 	const FStoreItem& GetItemType() const { return CachedItem; }
+	
+	/** How many items are currently inside */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Inventory")
+	int32 Quantity = 0;
 };
