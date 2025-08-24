@@ -51,13 +51,15 @@ void UPlayerShopHUD::BuildInventoryUI()
 
         if (i == BoxSlotIndex)
         {
-            // Carried box slot
-            if (!CarriedBox.IsEmpty())
+            // ✅ Show carried box if it exists, even when Quantity == 0
+            if (CarriedBox.BoxType != NAME_None)
             {
+                // Pass CachedItem (kept even at 0) so the widget can show the box/last-item icon
                 Widget->UpdateSlot(FStoreItem(), CarriedBox.CachedItem, CarriedBox.Quantity);
             }
             else
             {
+                // No box carried
                 Widget->UpdateSlot(FStoreItem(), FStoreItem(), 0);
             }
         }
@@ -85,7 +87,6 @@ void UPlayerShopHUD::BuildInventoryUI()
             }
         }
 
-        // Highlight selected slot
         Widget->SetHighlighted(i == SelectedHotbarIndex);
     }
 }
@@ -121,7 +122,8 @@ bool UPlayerShopHUD::IsCurrentSlotBox() const
 		return false; // Not the box slot
 	}
 
-	return !CarriedBox.IsEmpty(); // True if we are carrying a valid box
+	// ✅ True if a box is carried at all, regardless of quantity
+	return (CarriedBox.BoxType != NAME_None);
 }
 
 bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
@@ -132,25 +134,37 @@ bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
         return false;
     }
 
-    const int32 BoxSlotIndex = HotbarCount-1;
+    const int32 BoxSlotIndex = HotbarCount - 1;
 
     // --- Carried box slot ---
     if (SelectedHotbarIndex == BoxSlotIndex)
     {
-        if (CarriedBox.IsEmpty())
+        // Box exists?
+        if (CarriedBox.BoxType == NAME_None)
         {
-            UE_LOG(LogTemp, Warning, TEXT("Carried box is empty"));
+            UE_LOG(LogTemp, Warning, TEXT("No carried box"));
             return false;
         }
 
-        UE_LOG(LogTemp, Log, TEXT("Using item '%s' from carried box, remaining %d"), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity - 1);
+        // Has items?
+        if (CarriedBox.Quantity <= 0)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Carried box '%s' is empty (still carried)"), *CarriedBox.BoxType.ToString());
+            RefreshHotbar(); // keep UI showing the empty box
+            return false;
+        }
+
+        // Use one item
         OutItem = CarriedBox.CachedItem;
         CarriedBox.Quantity--;
 
-        if (CarriedBox.Quantity <= 0)
+        UE_LOG(LogTemp, Log, TEXT("Using item '%s' from carried box, remaining %d"),
+            *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
+
+        // ⚠️ Do NOT clear CachedItem when Quantity hits 0 — we want the box to remain visible
+        if (CarriedBox.Quantity == 0)
         {
-            UE_LOG(LogTemp, Log, TEXT("Carried box is now empty"));
-            CarriedBox = FCarriedBox();
+            UE_LOG(LogTemp, Log, TEXT("Box '%s' is now empty but still carried"), *CarriedBox.BoxType.ToString());
         }
 
         RefreshHotbar();
@@ -174,20 +188,25 @@ bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
 
     if (!CurrentSlot.SingleItem.ItemName.IsEmpty())
     {
-        UE_LOG(LogTemp, Log, TEXT("Using single item '%s' from slot %d"), *CurrentSlot.SingleItem.ItemName.ToString(), SelectedHotbarIndex);
         OutItem = CurrentSlot.SingleItem;
+        UE_LOG(LogTemp, Log, TEXT("Using single item '%s' from slot %d"),
+            *OutItem.ItemName.ToString(), SelectedHotbarIndex);
+
         CurrentSlot.SingleItem = FStoreItem();
-        CurrentSlot.Quantity = 0;
+        CurrentSlot.Quantity   = 0;
     }
     else if (CurrentSlot.Quantity > 0)
     {
-        UE_LOG(LogTemp, Log, TEXT("Using supply box item '%s' from slot %d, remaining %d"), *CurrentSlot.SupplyBoxItem.ItemName.ToString(), SelectedHotbarIndex, CurrentSlot.Quantity - 1);
         OutItem = CurrentSlot.SupplyBoxItem;
         CurrentSlot.Quantity--;
+
+        UE_LOG(LogTemp, Log, TEXT("Using supply box item '%s' from slot %d, remaining %d"),
+            *CurrentSlot.SupplyBoxItem.ItemName.ToString(), SelectedHotbarIndex, CurrentSlot.Quantity);
 
         if (CurrentSlot.Quantity <= 0)
         {
             CurrentSlot.SupplyBoxItem = FStoreItem();
+            CurrentSlot.Quantity = 0;
         }
     }
 
@@ -230,7 +249,7 @@ bool UPlayerShopHUD::AddBox(const FCarriedBox& NewBox)
 // PlayerShopHUD.cpp
 bool UPlayerShopHUD::RemoveBox(FStoreItem& OutItem, int32& OutQuantity, FName& OutBoxType)
 {
-	if (CarriedBox.IsEmpty())
+	if (CarriedBox.BoxType == NAME_None)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot remove box: no box carried"));
 		return false;
@@ -331,7 +350,7 @@ bool UPlayerShopHUD::RemoveItemFromSlot(int32 SlotIndex, FStoreItem& OutItem)
 
 bool UPlayerShopHUD::TryAddItemToCarriedBox(const FStoreItem& ItemData, int32 Amount)
 {
-	if (CarriedBox.IsEmpty())
+	if (CarriedBox.BoxType == NAME_None)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No carried box to add items into"));
 		return false;
