@@ -81,6 +81,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category="Inventory")
 	FCarriedBox CarriedBox;
 
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	bool HasVacantNormalSlot() const;
+
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	bool TryAddItemToCarriedBox(const FStoreItem& ItemData, int32 Amount);
+
 	int32 HotbarCount = 5;
 protected:
 	/** Hotbar (5 slots) */

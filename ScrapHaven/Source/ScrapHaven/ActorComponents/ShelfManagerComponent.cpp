@@ -126,25 +126,30 @@ AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
     }
     return nullptr; // No valid item
 }
-
 AActor* UShelfManagerComponent::TakeLastItem()
 {
     for (int32 i = Slots.Num() - 1; i >= 0; --i) // iterate backwards
-    {
+        {
         FItemSlot& Slot = Slots[i];
+
         if (Slot.bOccupied && Slot.OccupyingItem.IsValid())
         {
             AActor* Item = Slot.OccupyingItem.Get();
 
             // Free the slot
             Slot.bOccupied = false;
-            Slot.OccupyingItem = nullptr;
-            TotalItems--;
+            Slot.OccupyingItem.Reset();
+
+            // Decrease item count, but clamp to 0 for safety
+            TotalItems = FMath::Max(0, TotalItems - 1);
+
             return Item; // Return the item reference
         }
-    }
+        }
+
     return nullptr; // No items found
 }
+
 
 void UShelfManagerComponent::AddPriceValue(float PriceIncrement)
 {

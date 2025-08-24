@@ -328,3 +328,56 @@ bool UPlayerShopHUD::RemoveItemFromSlot(int32 SlotIndex, FStoreItem& OutItem)
 
 	return true;
 }
+
+bool UPlayerShopHUD::TryAddItemToCarriedBox(const FStoreItem& ItemData, int32 Amount)
+{
+	if (CarriedBox.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No carried box to add items into"));
+		return false;
+	}
+
+	if (!CarriedBox.CachedItem.ItemName.EqualTo(ItemData.ItemName))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot add item '%s' to box of type '%s'"),
+			*ItemData.ItemName.ToString(),
+			*CarriedBox.CachedItem.ItemName.ToString());
+		return false;
+	}
+
+	if (CarriedBox.Quantity >= CarriedBox.MaxQuantity)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Carried box already full (%d/%d)"),
+			CarriedBox.Quantity, CarriedBox.MaxQuantity);
+		return false;
+	}
+
+	int32 SpaceLeft = CarriedBox.MaxQuantity - CarriedBox.Quantity;
+	int32 AmountToAdd = FMath::Min(Amount, SpaceLeft);
+
+	CarriedBox.Quantity += AmountToAdd;
+
+	UE_LOG(LogTemp, Log, TEXT("Added %d of '%s' into carried box. Now at %d/%d"),
+		AmountToAdd,
+		*ItemData.ItemName.ToString(),
+		CarriedBox.Quantity,
+		CarriedBox.MaxQuantity);
+
+	RefreshHotbar();
+	return true;
+}
+
+bool UPlayerShopHUD::HasVacantNormalSlot() const
+{
+	for (int32 i = 0; i < HotbarCount-1; i++)
+	{
+		if (InventorySlots.IsValidIndex(i) && InventorySlots[i].IsEmpty())
+		{
+			UE_LOG(LogTemp, Log, TEXT("Vacant slot found at index %d"), i);
+			return true;
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("No vacant normal slots available"));
+	return false;
+}

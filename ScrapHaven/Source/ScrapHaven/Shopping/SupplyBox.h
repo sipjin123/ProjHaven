@@ -19,6 +19,10 @@ struct FCarriedBox
 	UPROPERTY(BlueprintReadWrite, Category="Box")
 	int32 Quantity = 0;
 
+	/** Quantity of items inside the box */
+	UPROPERTY(BlueprintReadWrite, Category="Box")
+	int32 MaxQuantity = 20;
+	
 	/** Type of the box (Small, Medium, Large, etc.) */
 	UPROPERTY(BlueprintReadWrite, Category="Box")
 	FName BoxType = NAME_None;
