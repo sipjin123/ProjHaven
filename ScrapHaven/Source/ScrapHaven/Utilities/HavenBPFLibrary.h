@@ -24,5 +24,11 @@ public:
 		FStoreItem ItemData,
 		FName BoxName,
 		int32 Quantity
-	);
+		);
+
+	UFUNCTION(BlueprintCallable, Category="Store")
+	static TSubclassOf<AActor> GetSpawnClassForItem(const FStoreItem& ItemData);
+	
+	UFUNCTION(BlueprintPure, Category="Floor Trace", meta=(DefaultToSelf="Actor"))
+	 static bool GetFloorInFront(AActor* Actor, FVector& OutFloorLocation, float ForwardDistance = 100.f, float TraceDistance = 500.f);
 };

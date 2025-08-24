@@ -106,58 +106,6 @@ void UPlayerShopHUD::SelectHotbarSlot(int32 SlotIndex)
 	}
 }
 
-bool UPlayerShopHUD::AddBoxOld(ASupplyBox* BoxActor)
-{
-	if (!BoxActor) return false;
-
-	for (FInventorySlot& InvSlot : InventorySlots)
-	{
-		if (InvSlot.IsEmpty())
-		{
-			// Copy the cached item from the box into the slot
-			InvSlot.SupplyBoxItem = BoxActor->GetItemType(); // FStoreItem
-			InvSlot.Quantity      = BoxActor->GetItemCount();
-
-			// Optional: keep a weak pointer if you still need live updates
-			//InvSlot.SupplyBoxActor = TWeakObjectPtr<ASupplyBox>(BoxActor);
-
-			// Notify UI (Blueprints can bind to this)
-			OnInventorySlotUpdated.Broadcast(InvSlot);
-
-			BuildInventoryUI();
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool UPlayerShopHUD::AddItem(AShopItem* ItemActor)
-{
-	if (!ItemActor) return false;
-
-	for (FInventorySlot& InvSlot : InventorySlots)
-	{
-		if (InvSlot.IsEmpty())
-		{
-			// Copy the item data from the actor
-			InvSlot.SingleItem = ItemActor->StoreItem; // FStoreItem
-			InvSlot.Quantity       = 1;
-
-			// Optional: keep a weak pointer to the actor for interaction
-			//InvSlot.SingleItemActor = TWeakObjectPtr<AShopItem>(ItemActor);
-
-			// Notify UI (Blueprints can bind to this)
-			OnInventorySlotUpdated.Broadcast(InvSlot);
-
-			BuildInventoryUI();
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void UPlayerShopHUD::RefreshHotbar()
 {
 	BuildInventoryUI();
@@ -308,5 +256,75 @@ bool UPlayerShopHUD::RemoveBox(FStoreItem& OutItem, int32& OutQuantity, FName& O
 	OnInventorySlotUpdated.Broadcast(SlotData);
 
 	RefreshHotbar();
+	return true;
+}
+
+bool UPlayerShopHUD::AddItem(AShopItem* ItemActor)
+{
+	if (!ItemActor) return false;
+
+	for (FInventorySlot& InvSlot : InventorySlots)
+	{
+		if (InvSlot.IsEmpty())
+		{
+			// Copy the item data from the actor
+			InvSlot.SingleItem = ItemActor->StoreItem; // FStoreItem
+			InvSlot.Quantity       = 1;
+
+			// Optional: keep a weak pointer to the actor for interaction
+			//InvSlot.SingleItemActor = TWeakObjectPtr<AShopItem>(ItemActor);
+
+			// Notify UI (Blueprints can bind to this)
+			OnInventorySlotUpdated.Broadcast(InvSlot);
+
+			BuildInventoryUI();
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool UPlayerShopHUD::RemoveItemFromSlot(int32 SlotIndex, FStoreItem& OutItem)
+{
+	if (!InventorySlots.IsValidIndex(SlotIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RemoveItemFromSlot: Invalid slot index %d"), SlotIndex);
+		return false;
+	}
+
+	FInventorySlot& NewSlot = InventorySlots[SlotIndex];
+
+	if (NewSlot.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RemoveItemFromSlot: Slot %d is empty"), SlotIndex);
+		return false;
+	}
+
+	// Remove a single item
+	if (!NewSlot.SingleItem.ItemName.IsEmpty())
+	{
+		OutItem = NewSlot.SingleItem;
+		NewSlot.SingleItem = FStoreItem();
+		NewSlot.Quantity = 0;
+		UE_LOG(LogTemp, Log, TEXT("Removed single item '%s' from slot %d"), *OutItem.ItemName.ToString(), SlotIndex);
+	}
+	else if (NewSlot.Quantity > 0)
+	{
+		OutItem = NewSlot.SupplyBoxItem;
+		NewSlot.Quantity--;
+
+		if (NewSlot.Quantity <= 0)
+		{
+			NewSlot.SupplyBoxItem = FStoreItem();
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Removed item from supply box in slot %d, remaining quantity %d"), SlotIndex, NewSlot.Quantity);
+	}
+
+	// Notify UI / Blueprint listeners
+	OnInventorySlotUpdated.Broadcast(NewSlot);
+	RefreshHotbar();
+
 	return true;
 }

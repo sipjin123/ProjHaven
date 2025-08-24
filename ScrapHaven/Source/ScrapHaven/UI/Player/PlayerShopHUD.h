@@ -57,10 +57,8 @@ public:
 	/** Add a ShopItem actor to inventory */
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	bool AddItem(AShopItem* Item);
-
-	/** Add a SupplyBox actor to inventory */
 	UFUNCTION(BlueprintCallable, Category="Inventory")
-	bool AddBoxOld(ASupplyBox* Box);
+	bool RemoveItemFromSlot(int32 SlotIndex, FStoreItem& OutItem);
 
 	/** Select a hotbar slot by index (0–4) */
 	UFUNCTION(BlueprintCallable, Category="UI")
