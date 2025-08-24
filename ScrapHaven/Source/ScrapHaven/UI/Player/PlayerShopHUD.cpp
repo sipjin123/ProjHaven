@@ -22,59 +22,77 @@ void UPlayerShopHUD::NativeConstruct()
 
 void UPlayerShopHUD::BuildInventoryUI()
 {
-	if (!InventoryWidgetClass) return;
+    if (!InventoryWidgetClass) return;
 
-	// --- Create widgets if they don’t exist yet ---
-	if (HotbarWidgets.Num() < 5)
-	{
-		HotbarWidgets.SetNum(5);
-		UserItemsBox->ClearChildren();
+    const int32 BoxSlotIndex = HotbarCount - 1; // last slot = carried box
 
-		for (int32 i = 0; i < 5; i++)
-		{
-			UInventorySlotWidget* ItemWidget = CreateWidget<UInventorySlotWidget>(this, InventoryWidgetClass);
-			if (ItemWidget)
-			{
-				UserItemsBox->AddChild(ItemWidget);
-				HotbarWidgets[i] = ItemWidget;
-			}
-		}
-	}
+    // --- Create hotbar widgets if they don’t exist ---
+    if (HotbarWidgets.Num() < HotbarCount)
+    {
+        HotbarWidgets.SetNum(HotbarCount);
+        UserItemsBox->ClearChildren();
 
-	// --- Update each widget ---
-	for (int32 i = 0; i < 5; i++)
-	{
-		if (!InventorySlots.IsValidIndex(i) || !HotbarWidgets[i]) continue;
+        for (int32 i = 0; i < HotbarCount; i++)
+        {
+            UInventorySlotWidget* ItemWidget = CreateWidget<UInventorySlotWidget>(this, InventoryWidgetClass);
+            if (ItemWidget)
+            {
+                UserItemsBox->AddChild(ItemWidget);
+                HotbarWidgets[i] = ItemWidget;
+            }
+        }
+    }
 
-		FInventorySlot& CurrentSlot = InventorySlots[i];
-		UInventorySlotWidget* ItemWidget = HotbarWidgets[i];
+    // --- Update each slot ---
+    for (int32 i = 0; i < HotbarCount; i++)
+    {
+        UInventorySlotWidget* Widget = HotbarWidgets[i];
+        if (!Widget) continue;
 
-		if (CurrentSlot.SingleItem.ItemName.ToString() != "")
-		{
-			// Single item present
-			ItemWidget->UpdateSlot(CurrentSlot.SingleItem, FStoreItem(), 1);
-		}
-		else if (CurrentSlot.Quantity > 0)
-		{
-			// Supply box slot
-			ItemWidget->UpdateSlot(FStoreItem(), CurrentSlot.SupplyBoxItem, CurrentSlot.Quantity);
-		}
-		else
-		{
-			// Empty slot
-			ItemWidget->UpdateSlot(FStoreItem(), FStoreItem(), 0);
-		}
+        if (i == BoxSlotIndex)
+        {
+            // Carried box slot
+            if (!CarriedBox.IsEmpty())
+            {
+                Widget->UpdateSlot(FStoreItem(), CarriedBox.CachedItem, CarriedBox.Quantity);
+            }
+            else
+            {
+                Widget->UpdateSlot(FStoreItem(), FStoreItem(), 0);
+            }
+        }
+        else
+        {
+            // Normal hotbar slot
+            if (!InventorySlots.IsValidIndex(i))
+            {
+                Widget->UpdateSlot(FStoreItem(), FStoreItem(), 0);
+                continue;
+            }
 
+            FInventorySlot& NewSlot = InventorySlots[i];
+            if (!NewSlot.SingleItem.ItemName.IsEmpty())
+            {
+                Widget->UpdateSlot(NewSlot.SingleItem, FStoreItem(), 1);
+            }
+            else if (NewSlot.Quantity > 0)
+            {
+                Widget->UpdateSlot(FStoreItem(), NewSlot.SupplyBoxItem, NewSlot.Quantity);
+            }
+            else
+            {
+                Widget->UpdateSlot(FStoreItem(), FStoreItem(), 0);
+            }
+        }
 
-		// Highlight selected slot
-		ItemWidget->SetHighlighted(i == SelectedHotbarIndex);
-	}
+        // Highlight selected slot
+        Widget->SetHighlighted(i == SelectedHotbarIndex);
+    }
 }
-
 
 void UPlayerShopHUD::SelectHotbarSlot(int32 SlotIndex)
 {
-	if (SlotIndex < 0 || SlotIndex >= 5) return;
+	if (SlotIndex < 0 || SlotIndex >= HotbarCount) return;
 
 	SelectedHotbarIndex = SlotIndex;
 
@@ -88,7 +106,7 @@ void UPlayerShopHUD::SelectHotbarSlot(int32 SlotIndex)
 	}
 }
 
-bool UPlayerShopHUD::AddBox(ASupplyBox* BoxActor)
+bool UPlayerShopHUD::AddBoxOld(ASupplyBox* BoxActor)
 {
 	if (!BoxActor) return false;
 
@@ -142,50 +160,123 @@ bool UPlayerShopHUD::AddItem(AShopItem* ItemActor)
 
 void UPlayerShopHUD::RefreshHotbar()
 {
-	for (int32 i = 0; i < HotbarWidgets.Num(); i++)
-	{
-		if (!InventorySlots.IsValidIndex(i)) continue;
-
-		FInventorySlot& CurrentSlot = InventorySlots[i]; // rename local variable
-		if (UInventorySlotWidget* Widget = HotbarWidgets[i])
-		{
-			Widget->UpdateSlot(CurrentSlot.SingleItem, CurrentSlot.SupplyBoxItem, CurrentSlot.Quantity);
-		}
-	}
+	BuildInventoryUI();
 }
 
 bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
 {
-	if (!InventorySlots.IsValidIndex(SelectedHotbarIndex))
-		return false;
+    if (SelectedHotbarIndex < 0 || SelectedHotbarIndex >= HotbarWidgets.Num())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid SelectedHotbarIndex = %d"), SelectedHotbarIndex);
+        return false;
+    }
 
-	// Use a different name to avoid hiding any class member
-	FInventorySlot& CurrentSlot = InventorySlots[SelectedHotbarIndex];
+    const int32 BoxSlotIndex = HotbarCount-1;
 
-	if (CurrentSlot.IsEmpty())
-		return false;
+    // --- Carried box slot ---
+    if (SelectedHotbarIndex == BoxSlotIndex)
+    {
+        if (CarriedBox.IsEmpty())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Carried box is empty"));
+            return false;
+        }
 
-	// Return the correct item
-	if (!CurrentSlot.SingleItem.ItemName.IsEmpty())
+        UE_LOG(LogTemp, Log, TEXT("Using item '%s' from carried box, remaining %d"), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity - 1);
+        OutItem = CarriedBox.CachedItem;
+        CarriedBox.Quantity--;
+
+        if (CarriedBox.Quantity <= 0)
+        {
+            UE_LOG(LogTemp, Log, TEXT("Carried box is now empty"));
+            CarriedBox = FCarriedBox();
+        }
+
+        RefreshHotbar();
+        return true;
+    }
+
+    // --- Normal hotbar slots ---
+    if (!InventorySlots.IsValidIndex(SelectedHotbarIndex))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Inventory slot %d is invalid"), SelectedHotbarIndex);
+        return false;
+    }
+
+    FInventorySlot& CurrentSlot = InventorySlots[SelectedHotbarIndex];
+
+    if (CurrentSlot.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Hotbar slot %d is empty"), SelectedHotbarIndex);
+        return false;
+    }
+
+    if (!CurrentSlot.SingleItem.ItemName.IsEmpty())
+    {
+        UE_LOG(LogTemp, Log, TEXT("Using single item '%s' from slot %d"), *CurrentSlot.SingleItem.ItemName.ToString(), SelectedHotbarIndex);
+        OutItem = CurrentSlot.SingleItem;
+        CurrentSlot.SingleItem = FStoreItem();
+        CurrentSlot.Quantity = 0;
+    }
+    else if (CurrentSlot.Quantity > 0)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Using supply box item '%s' from slot %d, remaining %d"), *CurrentSlot.SupplyBoxItem.ItemName.ToString(), SelectedHotbarIndex, CurrentSlot.Quantity - 1);
+        OutItem = CurrentSlot.SupplyBoxItem;
+        CurrentSlot.Quantity--;
+
+        if (CurrentSlot.Quantity <= 0)
+        {
+            CurrentSlot.SupplyBoxItem = FStoreItem();
+        }
+    }
+
+    RefreshHotbar();
+    return true;
+}
+
+bool UPlayerShopHUD::AddBox(const FCarriedBox& NewBox)
+{
+	// If already carrying a box, cannot add another
+	if (!CarriedBox.IsEmpty())
 	{
-		OutItem = CurrentSlot.SingleItem;
-		// Single items are always quantity 1, so clear the slot
-		CurrentSlot.SingleItem = FStoreItem();
+		UE_LOG(LogTemp, Warning, TEXT("Cannot add box: already carrying a box"));
+		return false;
 	}
-	else if (CurrentSlot.Quantity > 0)
+
+	CarriedBox = NewBox;
+
+	// No need to add a new slot, just update the last hotbar slot
+	const int32 BoxSlotIndex = HotbarCount - 1;
+
+	if (HotbarWidgets.IsValidIndex(BoxSlotIndex))
 	{
-		// Supply box: return the item and decrement quantity
-		OutItem = CurrentSlot.SupplyBoxItem;
-		CurrentSlot.Quantity--;
-
-		// If quantity reaches zero, clear the supply box
-		if (CurrentSlot.Quantity <= 0)
-		{
-			CurrentSlot.SupplyBoxItem = FStoreItem();
-		}
+		HotbarWidgets[BoxSlotIndex]->UpdateSlot(FStoreItem(), CarriedBox.CachedItem, CarriedBox.Quantity);
 	}
 
-	RefreshHotbar(); // Update the UI
+	UE_LOG(LogTemp, Log, TEXT("Picked up box of type '%s' containing '%s', quantity %d"),
+		*CarriedBox.BoxType.ToString(), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
+
+	return true;
+}
+
+bool UPlayerShopHUD::RemoveBox()
+{
+	if (CarriedBox.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot remove box: no box carried"));
+		return false;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Removed carried box of type '%s' containing '%s', quantity %d"), *CarriedBox.BoxType.ToString(), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
+	CarriedBox = FCarriedBox(); // Clear
+
+	// Update UI
+	FInventorySlot SlotData;
+	SlotData.SupplyBoxItem = FStoreItem();
+	SlotData.Quantity = 0;
+	OnInventorySlotUpdated.Broadcast(SlotData);
+
+	RefreshHotbar();
 	return true;
 }
 

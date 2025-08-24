@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Data/FStoreItem.h"
+#include "Shopping/SupplyBox.h"
 #include "PlayerShopHUD.generated.h"
 
 class UHorizontalBox;
@@ -59,7 +60,7 @@ public:
 
 	/** Add a SupplyBox actor to inventory */
 	UFUNCTION(BlueprintCallable, Category="Inventory")
-	bool AddBox(ASupplyBox* Box);
+	bool AddBoxOld(ASupplyBox* Box);
 
 	/** Select a hotbar slot by index (0–4) */
 	UFUNCTION(BlueprintCallable, Category="UI")
@@ -67,9 +68,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	bool HandleUseCurrentSlot(FStoreItem& OutItem);
+	
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	bool RemoveBox();
+
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	bool AddBox(const FCarriedBox& NewBox);
 
 	UFUNCTION(BlueprintCallable, Category="UI")
 	void RefreshHotbar();
+
+	/** The box the player is carrying (Slot 6) */
+	UPROPERTY(BlueprintReadOnly, Category="Inventory")
+	FCarriedBox CarriedBox;
+
+	int32 HotbarCount = 5;
 protected:
 	/** Hotbar (5 slots) */
 	UPROPERTY(meta = (BindWidget), BlueprintReadWrite)
@@ -97,4 +110,50 @@ protected:
 	/** References to the hotbar slot widgets */
 	UPROPERTY()
 	TArray<UInventorySlotWidget*> HotbarWidgets;
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+bool GetCurrentSlotItem(FStoreItem& OutItem) const
+	{
+		if (!HotbarWidgets.IsValidIndex(SelectedHotbarIndex))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GetCurrentSlotItem: Invalid slot index %d"), SelectedHotbarIndex);
+			return false;
+		}
+
+		const int32 BoxSlotIndex = HotbarCount - 1; // last slot = carried box
+
+		if (SelectedHotbarIndex == BoxSlotIndex)
+		{
+			// Last slot = carried box
+			if (CarriedBox.IsEmpty())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("GetCurrentSlotItem: Carried box is empty"));
+				return false;
+			}
+
+			OutItem = CarriedBox.CachedItem;
+			return true;
+		}
+		else
+		{
+			// Normal item slots
+			if (!InventorySlots.IsValidIndex(SelectedHotbarIndex))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("GetCurrentSlotItem: Inventory slot invalid"));
+				return false;
+			}
+
+			const FInventorySlot& CurrentSlot = InventorySlots[SelectedHotbarIndex];
+
+			if (CurrentSlot.IsEmpty() || CurrentSlot.SingleItem.ItemName.IsEmpty())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("GetCurrentSlotItem: Slot %d is empty"), SelectedHotbarIndex);
+				return false;
+			}
+
+			OutItem = CurrentSlot.SingleItem;
+			return true;
+		}
+	}
 };

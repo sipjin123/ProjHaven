@@ -6,6 +6,27 @@
 #include "GameFramework/Actor.h"
 #include "SupplyBox.generated.h"
 
+USTRUCT(BlueprintType)
+struct FCarriedBox
+{
+	GENERATED_BODY()
+
+	/** The item this box contains */
+	UPROPERTY(BlueprintReadWrite, Category="Box")
+	FStoreItem CachedItem;
+
+	/** Quantity of items inside the box */
+	UPROPERTY(BlueprintReadWrite, Category="Box")
+	int32 Quantity = 0;
+
+	/** Type of the box (Small, Medium, Large, etc.) */
+	UPROPERTY(BlueprintReadWrite, Category="Box")
+	FName BoxType = NAME_None;
+
+	/** Is the box empty? */
+	bool IsEmpty() const { return Quantity <= 0 || CachedItem.ItemName.IsEmpty(); }
+};
+
 class UStaticMeshComponent;
 class UShapeComponent;
 
