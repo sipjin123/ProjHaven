@@ -69,8 +69,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	bool HandleUseCurrentSlot(FStoreItem& OutItem);
 	
+	// PlayerShopHUD.h
 	UFUNCTION(BlueprintCallable, Category="Inventory")
-	bool RemoveBox();
+	bool RemoveBox(FStoreItem& OutItem, int32& OutQuantity, FName& OutBoxType);
 
 	UFUNCTION(BlueprintCallable, Category="Inventory")
 	bool AddBox(const FCarriedBox& NewBox);
@@ -156,4 +157,6 @@ bool GetCurrentSlotItem(FStoreItem& OutItem) const
 			return true;
 		}
 	}
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	bool IsCurrentSlotBox() const;
 };

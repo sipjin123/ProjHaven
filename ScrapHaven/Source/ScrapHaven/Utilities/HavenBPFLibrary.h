@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Shopping/SupplyBox.h"
 #include "HavenBPFLibrary.generated.h"
 
 /**
@@ -13,5 +14,15 @@ UCLASS()
 class SCRAPHAVEN_API UHavenBPFLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Store", meta=(WorldContext="WorldContextObject"))
+	static ASupplyBox* SpawnSupplyBoxActor(
+		UObject* WorldContextObject,
+		TSubclassOf<ASupplyBox> BoxClass,
+		const FTransform& SpawnTransform,
+		FStoreItem ItemData,
+		FName BoxName,
+		int32 Quantity
+	);
 };

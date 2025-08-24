@@ -163,6 +163,19 @@ void UPlayerShopHUD::RefreshHotbar()
 	BuildInventoryUI();
 }
 
+// PlayerShopHUD.cpp
+bool UPlayerShopHUD::IsCurrentSlotBox() const
+{
+	const int32 BoxSlotIndex = HotbarCount - 1;
+
+	if (SelectedHotbarIndex != BoxSlotIndex)
+	{
+		return false; // Not the box slot
+	}
+
+	return !CarriedBox.IsEmpty(); // True if we are carrying a valid box
+}
+
 bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
 {
     if (SelectedHotbarIndex < 0 || SelectedHotbarIndex >= HotbarWidgets.Num())
@@ -236,30 +249,38 @@ bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
 
 bool UPlayerShopHUD::AddBox(const FCarriedBox& NewBox)
 {
-	// If already carrying a box, cannot add another
+	const int32 BoxSlotIndex = HotbarCount - 1; // last slot = carried box
+
+	// Ensure the hotbar widget exists
+	if (!HotbarWidgets.IsValidIndex(BoxSlotIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AddBox: Hotbar widget not ready yet!"));
+		return false;
+	}
+
+	// Prevent picking up another box if already carrying one
 	if (!CarriedBox.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot add box: already carrying a box"));
 		return false;
 	}
 
+	// Assign the new box
 	CarriedBox = NewBox;
 
-	// No need to add a new slot, just update the last hotbar slot
-	const int32 BoxSlotIndex = HotbarCount - 1;
-
-	if (HotbarWidgets.IsValidIndex(BoxSlotIndex))
+	// Update UI immediately
+	if (UInventorySlotWidget* BoxWidget = HotbarWidgets[BoxSlotIndex])
 	{
-		HotbarWidgets[BoxSlotIndex]->UpdateSlot(FStoreItem(), CarriedBox.CachedItem, CarriedBox.Quantity);
+		BoxWidget->UpdateSlot(FStoreItem(), CarriedBox.CachedItem, CarriedBox.Quantity);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Picked up box of type '%s' containing '%s', quantity %d"),
-		*CarriedBox.BoxType.ToString(), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
+	UE_LOG(LogTemp, Log, TEXT("Picked up box '%s' with %d items"), 
+		*CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
 
 	return true;
 }
-
-bool UPlayerShopHUD::RemoveBox()
+// PlayerShopHUD.cpp
+bool UPlayerShopHUD::RemoveBox(FStoreItem& OutItem, int32& OutQuantity, FName& OutBoxType)
 {
 	if (CarriedBox.IsEmpty())
 	{
@@ -267,8 +288,18 @@ bool UPlayerShopHUD::RemoveBox()
 		return false;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Removed carried box of type '%s' containing '%s', quantity %d"), *CarriedBox.BoxType.ToString(), *CarriedBox.CachedItem.ItemName.ToString(), CarriedBox.Quantity);
-	CarriedBox = FCarriedBox(); // Clear
+	// Extract info before clearing
+	OutItem     = CarriedBox.CachedItem;
+	OutQuantity = CarriedBox.Quantity;
+	OutBoxType  = CarriedBox.BoxType;
+
+	UE_LOG(LogTemp, Log, TEXT("Removed carried box of type '%s' containing '%s', quantity %d"),
+		*OutBoxType.ToString(),
+		*OutItem.ItemName.ToString(),
+		OutQuantity);
+
+	// Clear box
+	CarriedBox = FCarriedBox();
 
 	// Update UI
 	FInventorySlot SlotData;
@@ -279,4 +310,3 @@ bool UPlayerShopHUD::RemoveBox()
 	RefreshHotbar();
 	return true;
 }
-

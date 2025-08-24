@@ -43,11 +43,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+public:
 	/** Cached item definition this box is storing */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Inventory")
 	FStoreItem CachedItem;
-
-public:
+	
 	/** Visual mesh for the box (can be swapped in BP) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	UStaticMeshComponent* BoxMesh;
@@ -60,10 +60,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
 	UDataTable* ItemDataTable;
 
-	/** Row name of the item this box should contain */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
+	/** Row name of the item inside this box (set on spawn) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Store", meta=(ExposeOnSpawn="true"))
 	FName ItemRowName;
-
+	
+	/** Row name of the item inside this box (set on spawn) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Store", meta=(ExposeOnSpawn="true"))
+	FName BoxTypeRowName;
+	
 	/** Event when items change */
 	UPROPERTY(BlueprintAssignable, Category="Inventory")
 	FOnSupplyChanged OnSupplyChanged;
