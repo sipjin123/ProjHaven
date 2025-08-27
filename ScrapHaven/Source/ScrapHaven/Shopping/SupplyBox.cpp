@@ -45,7 +45,7 @@ void ASupplyBox::BeginPlay()
 bool ASupplyBox::AddItem(const FStoreItem& Item)
 {
 	// Only allow adding if it's the same type as this box
-	if (Item.ItemName.EqualTo(CachedItem.ItemName))
+	if (Item.ItemName == CachedItem.ItemName)
 	 // assuming FStoreItem has ItemName field
 	{
 		Quantity++;

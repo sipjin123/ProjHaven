@@ -73,7 +73,7 @@ void UPlayerShopHUD::BuildInventoryUI()
             }
 
             FInventorySlot& NewSlot = InventorySlots[i];
-            if (!NewSlot.SingleItem.ItemName.IsEmpty())
+            if (!NewSlot.SingleItem.ItemName.IsNone())
             {
                 Widget->UpdateSlot(NewSlot.SingleItem, FStoreItem(), 1);
             }
@@ -186,7 +186,7 @@ bool UPlayerShopHUD::HandleUseCurrentSlot(FStoreItem& OutItem)
         return false;
     }
 
-    if (!CurrentSlot.SingleItem.ItemName.IsEmpty())
+    if (!CurrentSlot.SingleItem.ItemName.IsNone())
     {
         OutItem = CurrentSlot.SingleItem;
         UE_LOG(LogTemp, Log, TEXT("Using single item '%s' from slot %d"),
@@ -321,7 +321,7 @@ bool UPlayerShopHUD::RemoveItemFromSlot(int32 SlotIndex, FStoreItem& OutItem)
 	}
 
 	// Remove a single item
-	if (!NewSlot.SingleItem.ItemName.IsEmpty())
+	if (!NewSlot.SingleItem.ItemName.IsNone())
 	{
 		OutItem = NewSlot.SingleItem;
 		NewSlot.SingleItem = FStoreItem();
@@ -356,7 +356,7 @@ bool UPlayerShopHUD::TryAddItemToCarriedBox(const FStoreItem& ItemData, int32 Am
 		return false;
 	}
 
-	if (!CarriedBox.CachedItem.ItemName.EqualTo(ItemData.ItemName))
+	if (CarriedBox.CachedItem.ItemName != ItemData.ItemName)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot add item '%s' to box of type '%s'"),
 			*ItemData.ItemName.ToString(),

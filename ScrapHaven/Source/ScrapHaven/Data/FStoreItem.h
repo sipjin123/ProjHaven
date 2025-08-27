@@ -27,7 +27,10 @@ struct FStoreItem : public FTableRowBase
 public:
 	/** Display name for UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
-	FText ItemName;
+	FName ItemName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
+	FText DisplayName;
 
 	/** Optional description */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")

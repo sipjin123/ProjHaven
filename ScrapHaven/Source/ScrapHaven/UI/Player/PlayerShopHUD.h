@@ -33,7 +33,7 @@ struct FInventorySlot
 	int32 Quantity = 0;
 
 	/** Is this slot empty? */
-	bool IsEmpty() const { return Quantity <= 0 && SingleItem.ItemName.IsEmpty(); }
+	bool IsEmpty() const { return Quantity <= 0 && SingleItem.ItemName.IsNone(); }
 };
 
 
@@ -151,7 +151,7 @@ bool GetCurrentSlotItem(FStoreItem& OutItem) const
 
 			const FInventorySlot& CurrentSlot = InventorySlots[SelectedHotbarIndex];
 
-			if (CurrentSlot.IsEmpty() || CurrentSlot.SingleItem.ItemName.IsEmpty())
+			if (CurrentSlot.IsEmpty() || CurrentSlot.SingleItem.ItemName.IsNone())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("GetCurrentSlotItem: Slot %d is empty"), SelectedHotbarIndex);
 				return false;

@@ -28,7 +28,7 @@ struct FCarriedBox
 	FName BoxType = NAME_None;
 
 	/** Is the box empty? */
-	bool IsEmpty() const { return Quantity <= 0 || CachedItem.ItemName.IsEmpty(); }
+	bool IsEmpty() const { return Quantity <= 0 || CachedItem.ItemName.IsNone(); }
 };
 
 class UStaticMeshComponent;
