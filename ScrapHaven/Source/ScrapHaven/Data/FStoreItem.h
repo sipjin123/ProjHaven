@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "FCitizenAttributes.h"
 #include "FCitizenNeedsModifiers.h"
+#include "Utilities/HavenEnums.h"
 #include "FStoreItem.generated.h"
 
 UENUM(BlueprintType)
@@ -43,6 +44,9 @@ public:
 	/** Item type (food, medicine, etc.) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	EItemType ItemType = EItemType::Other;
+
+	UPROPERTY(BlueprintReadWrite)
+	EFoodCategory Category = EFoodCategory::None;
 
 	/** Base buy price in the shop */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Economy", meta=(ClampMin="0"))

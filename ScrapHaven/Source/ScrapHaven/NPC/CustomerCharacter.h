@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NPCBehaviorGenerator.h"
+#include "StructData.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/Sociable.h"
 #include "CustomerCharacter.generated.h"
@@ -27,4 +29,15 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	FName NpcName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	FNPCData NPCData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	FDailyBehaviorProfile DailyBehaviorProfile;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	FShopListData ShopListData;
 };

@@ -45,6 +45,18 @@ struct FPOIData
 };
 
 USTRUCT(BlueprintType)
+struct FItemPurchasePair
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Data")
+	FName ItemName;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Data")
+	int32 Quantity = 0;
+};
+
+USTRUCT(BlueprintType)
 struct FShopListData
 {
 	GENERATED_BODY()
@@ -57,13 +69,16 @@ struct FShopListData
 };
 
 USTRUCT(BlueprintType)
-struct FItemPurchasePair
+struct FNPCData
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
-	FName ItemName;
-	
-	UPROPERTY(BlueprintReadWrite, Category="Coord")
-	int32 Quantity = 0;
+	FName CitizenName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	ENPCType NPCType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
+	EOccupationType OccupationType;
 };
