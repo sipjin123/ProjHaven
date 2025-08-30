@@ -266,3 +266,125 @@ FShopListData UNPCFuncLibrary::GenerateShoppingList(const FDailyBehaviorProfile&
 
 	return Result;
 }
+
+FShopListData UNPCFuncLibrary::GenerateShoppingListComplex(
+    const FDailyBehaviorProfile& Behavior,
+    const FPOIData& TargetShop,
+    const TArray<FStoreItem>& AvailableItems)
+{
+    FShopListData ShopData;
+    ShopData.POIData = TargetShop;
+
+    // --- Handle needs ---
+    for (auto& NeedPair : Behavior.Needs)
+    {
+        ENPCNeedType NeedType = NeedPair.Need; // TMap<ENPCNeedType, float>
+        float Intensity = NeedPair.Intensity;
+
+        if (Intensity < 10.0f && Behavior.Mood != ENPCMoodType::Cheerful)
+            continue; // skip negligible needs unless cheerful
+
+        // Find items that satisfy this need
+        TArray<FStoreItem> MatchingItems;
+        for (const FStoreItem& Item : AvailableItems)
+        {
+            // Determine if item satisfies the need
+            float EffectValue = 0.f;
+            switch (NeedType)
+            {
+                case ENPCNeedType::Hungry:   EffectValue = Item.HungerEffect; break;
+                case ENPCNeedType::Thirsty:   EffectValue = Item.ThirstEffect; break;
+                case ENPCNeedType::Tired:    EffectValue = Item.EnergyEffect; break;
+                default: continue;
+            }
+
+            if (EffectValue > 0.f)
+                MatchingItems.Add(Item);
+        }
+
+        if (MatchingItems.Num() == 0)
+            continue;
+
+        // Choose one item randomly
+        int32 Index = FMath::RandRange(0, MatchingItems.Num() - 1);
+        const FStoreItem& ChosenItem = MatchingItems[Index];
+
+        // Quantity based on intensity vs. effect value
+        int32 Quantity = FMath::Clamp(FMath::RoundToInt(Intensity / FMath::Max(ChosenItem.HungerEffect, FMath::Max(ChosenItem.ThirstEffect, ChosenItem.EnergyEffect))), 1, 5);
+
+        FItemPurchasePair Pair;
+        Pair.ItemName = ChosenItem.ItemName;
+        Pair.Quantity = Quantity;
+
+        ShopData.ShoppingListArray.Add(Pair);
+    }
+
+    // --- Mood adjustments ---
+    switch (Behavior.Mood)
+    {
+        case ENPCMoodType::Cheerful:
+        {
+            // Add one random small treat
+            TArray<FStoreItem> Treats;
+            for (const FStoreItem& Item : AvailableItems)
+            {
+                if (Item.IsTreat())
+                    Treats.Add(Item);
+            }
+
+            if (Treats.Num() > 0)
+            {
+                int32 Index = FMath::RandRange(0, Treats.Num() - 1);
+                FItemPurchasePair Pair;
+                Pair.ItemName = Treats[Index].ItemName;
+                Pair.Quantity = 1;
+                ShopData.ShoppingListArray.Add(Pair);
+            }
+            break;
+        }
+
+        case ENPCMoodType::Irritable:
+        {
+            // Remove non-essential items with low effect values (<30)
+            ShopData.ShoppingListArray.RemoveAll([&](const FItemPurchasePair& Pair)
+            {
+                const FStoreItem* Item = AvailableItems.FindByPredicate([&](const FStoreItem& SI){ return SI.ItemName == Pair.ItemName; });
+                if (!Item) return false;
+
+                float MaxEffect = FMath::Max(Item->HungerEffect, FMath::Max(Item->ThirstEffect, Item->EnergyEffect));
+                return MaxEffect < 30.f && !Item->bIsEssential;
+            });
+            break;
+        }
+
+        case ENPCMoodType::Dissociate:
+        {
+            // Only keep essential items
+            ShopData.ShoppingListArray.RemoveAll([&](const FItemPurchasePair& Pair)
+            {
+                const FStoreItem* Item = AvailableItems.FindByPredicate([&](const FStoreItem& SI){ return SI.ItemName == Pair.ItemName; });
+                return Item && !Item->bIsEssential;
+            });
+            break;
+        }
+
+        case ENPCMoodType::Curious:
+        {
+            // Add one random item from available shop items
+            if (AvailableItems.Num() > 0)
+            {
+                int32 Index = FMath::RandRange(0, AvailableItems.Num() - 1);
+                FItemPurchasePair Pair;
+                Pair.ItemName = AvailableItems[Index].ItemName;
+                Pair.Quantity = 1;
+                ShopData.ShoppingListArray.Add(Pair);
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    return ShopData;
+}

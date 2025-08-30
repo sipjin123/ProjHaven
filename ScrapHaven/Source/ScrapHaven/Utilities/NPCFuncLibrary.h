@@ -32,4 +32,8 @@ class SCRAPHAVEN_API UNPCFuncLibrary : public UBlueprintFunctionLibrary
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
 	static FShopListData GenerateShoppingList(const FDailyBehaviorProfile& Behavior, const FPOIData& TargetShop);
+
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
+	static FShopListData GenerateShoppingListComplex(const FDailyBehaviorProfile& Behavior, const FPOIData& TargetShop, const TArray<FStoreItem>& AvailableItems);
 };

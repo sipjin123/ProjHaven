@@ -20,6 +20,7 @@ enum class EFoodCategory : uint8 {
 	Drink = 3       UMETA(DisplayName = "Drink"),
 	Dessert = 4     UMETA(DisplayName = "Dessert"),
 	Coffee = 5      UMETA(DisplayName = "Coffee"), // special drink
+	Ingredient = 6     UMETA(DisplayName = "Ingredient"),
 };
 
 UENUM(BlueprintType)

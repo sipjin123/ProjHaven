@@ -32,6 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Needs", meta=(ClampMin="0.0", ClampMax="100.0", UIMin="0.0", UIMax="100.0"))
 	float Social = 100.f;
 
+	// Social need (0 = lonely, 100 = socially fulfilled)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Needs", meta=(ClampMin="0.0", ClampMax="100.0", UIMin="0.0", UIMax="100.0"))
+	float Thirst = 100.f;
+
 	// Wealth in coins/money the citizen can spend
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Needs", meta=(ClampMin="0.0", ClampMax="100.0", UIMin="0.0", UIMax="100.0"))
 	int32 Wealth = 0;

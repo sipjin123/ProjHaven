@@ -26,48 +26,85 @@ struct FStoreItem : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	/** Display name for UI */
+	// --- Basic Info ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	FName ItemName;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	FText DisplayName;
 
-	/** Optional description */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	FText Description;
 
-	/** Icon for UI */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	UTexture2D* Icon = nullptr;
 
-	/** Item type (food, medicine, etc.) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	EItemType ItemType = EItemType::Other;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category="Item")
 	EFoodCategory Category = EFoodCategory::None;
 
-	/** Base buy price in the shop */
+	// --- Economy ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Economy", meta=(ClampMin="0"))
 	float BuyPrice = 0;
 
-	/** Base sell price if player sells back */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Economy", meta=(ClampMin="0"))
 	float SellPrice = 0;
 
-	/** Whether the item can stack (e.g. food, materials) */
+	// --- Stack ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	bool bStackable = false;
 
-	/** Max stack size if stackable */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item", meta=(EditCondition="bStackable", ClampMin="1", ClampMax="999"))
 	int32 MaxStackSize = 1;
 
-	/** If item modifies citizen needs (e.g. food reduces hunger, medicine restores health) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects")
-	FCitizenAttributes AttributeEffect;
-	
+	// --- Effects on citizen ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 HungerEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 EnergyEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 HealthEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 HappinessEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 SocialEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 ThirstEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0"))
+	int32 WealthEffect = 0;
+
+	// --- Optional gameplay flags ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
-	TSubclassOf<class AShopItem> ItemActorClass; // 🔹 Class to spawn in world
+	bool bIsEssential = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
+	bool bIsTreat = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
+	TSubclassOf<class AShopItem> ItemActorClass = nullptr;
+
+	// --- Helper functions ---
+	bool IsTreat() const { return bIsTreat; }
+	bool IsEssential() const { return bIsEssential; }
+
+	FCitizenAttributes GetAttributeEffect() const
+	{
+		FCitizenAttributes Attr;
+		Attr.Hunger = HungerEffect;
+		Attr.Energy = EnergyEffect;
+		Attr.Health = HealthEffect;
+		Attr.Happiness = HappinessEffect;
+		Attr.Social = SocialEffect;
+		Attr.Thirst = ThirstEffect;
+		Attr.Wealth = WealthEffect;
+		return Attr;
+	}
 };
