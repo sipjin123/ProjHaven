@@ -64,6 +64,9 @@ public:
 	int32 HungerEffect = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
+	int32 ThirstEffect = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
 	int32 EnergyEffect = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
@@ -74,10 +77,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
 	int32 SocialEffect = 0.f;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0.0", ClampMax="100.0"))
-	int32 ThirstEffect = 0.f;
-
+	int32 ComfortEffect = 0.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0"))
 	int32 WealthEffect = 0;
 

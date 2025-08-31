@@ -388,3 +388,48 @@ FShopListData UNPCFuncLibrary::GenerateShoppingListComplex(
 
     return ShopData;
 }
+
+TArray<FItemPurchasePair> UNPCFuncLibrary::GenerateSampleInventory(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity)
+{
+
+	TArray<FItemPurchasePair> Inventory;
+
+	if (!ItemDataTable) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null in UStoreSubsystem!"));
+		return Inventory;
+	}
+
+	// Get all rows from the DataTable
+	static const FString ContextString(TEXT("GenerateRandomInventory"));
+	TArray<FStoreItem*> AllItems;
+	ItemDataTable->GetAllRows(ContextString, AllItems);
+
+	if (AllItems.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No rows in ItemDataTable!"));
+		return Inventory;
+	}
+
+	// Clamp number of items to avoid out-of-range
+	NumItems = FMath::Clamp(NumItems, 1, AllItems.Num());
+
+	// Randomly shuffle and pick items
+	TArray<int32> Indices;
+	for (int32 i = 0; i < AllItems.Num(); i++) { Indices.Add(i); }
+	Indices.Sort([](int32 A, int32 B){ return FMath::RandRange(0,1) == 0; }); // shuffle
+
+	for (int32 i = 0; i < NumItems; i++)
+	{
+		FStoreItem* StoreItem = AllItems[Indices[i]];
+		if (!StoreItem) continue;
+
+		FItemPurchasePair Pair;
+		Pair.ItemName = StoreItem->ItemName;
+		Pair.Quantity = FMath::RandRange(MinQuantity, MaxQuantity);
+
+		Inventory.Add(Pair);
+	}
+
+	return Inventory;
+}
