@@ -84,6 +84,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Effects", meta=(ClampMin="0"))
 	int32 WealthEffect = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="InGameUse", meta=(ClampMin="0"))
+	int32 Quantity;
+	
 	// --- Optional gameplay flags ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	bool bIsEssential = false;

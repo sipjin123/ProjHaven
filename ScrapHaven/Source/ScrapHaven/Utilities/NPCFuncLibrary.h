@@ -38,4 +38,7 @@ class SCRAPHAVEN_API UNPCFuncLibrary : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
 	static TArray<FItemPurchasePair> GenerateSampleInventory(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
+	static TArray<FStoreItem> GenerateSampleInventoryv2(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity);
 };

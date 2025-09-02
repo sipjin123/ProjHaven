@@ -433,3 +433,50 @@ TArray<FItemPurchasePair> UNPCFuncLibrary::GenerateSampleInventory(UDataTable* I
 
 	return Inventory;
 }
+
+TArray<FStoreItem> UNPCFuncLibrary::GenerateSampleInventoryv2(
+	UDataTable* ItemDataTable, 
+	int32 NumItems, 
+	int32 MinQuantity, 
+	int32 MaxQuantity)
+{
+	TArray<FStoreItem> Inventory;
+
+	if (!ItemDataTable) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null in UNPCFuncLibrary!"));
+		return Inventory;
+	}
+
+	// Get all rows from the DataTable
+	static const FString ContextString(TEXT("GenerateSampleInventory"));
+	TArray<FStoreItem*> AllItems;
+	ItemDataTable->GetAllRows(ContextString, AllItems);
+
+	if (AllItems.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No rows in ItemDataTable!"));
+		return Inventory;
+	}
+
+	// Clamp number of items
+	NumItems = FMath::Clamp(NumItems, 1, AllItems.Num());
+
+	// Shuffle indices
+	TArray<int32> Indices;
+	for (int32 i = 0; i < AllItems.Num(); i++) { Indices.Add(i); }
+	Indices.Sort([](int32 A, int32 B){ return FMath::RandBool(); });
+
+	for (int32 i = 0; i < NumItems; i++)
+	{
+		FStoreItem* StoreItem = AllItems[Indices[i]];
+		if (!StoreItem) continue;
+
+		FStoreItem Copy = *StoreItem;
+		Copy.Quantity = FMath::RandRange(MinQuantity, MaxQuantity);
+
+		Inventory.Add(Copy);
+	}
+
+	return Inventory;
+}
