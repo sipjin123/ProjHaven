@@ -17,7 +17,7 @@ void UStoreSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		AllItems.Empty();
 		for (FStoreItem* Row : Rows)
 		{
-			if (Row)
+			if (Row && Row->bUnlocked)
 			{
 				AllItems.Add(*Row); // copy struct into array
 			}
@@ -110,4 +110,31 @@ void UStoreSubsystem::LogAllShelves() const
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("==== End Shelf Log ===="));
+}
+
+void UStoreSubsystem::UnlockItem(FName ItemName)
+{
+	if (FStoreItem* Row = ItemDataTable->FindRow<FStoreItem>(ItemName, TEXT("UnlockItem")))
+	{
+		Row->bUnlocked = true;   // mark as unlocked
+		UE_LOG(LogTemp, Log, TEXT("Unlocked item: %s"), *ItemName.ToString());
+	}
+}
+
+void UStoreSubsystem::LockItem(FName ItemName)
+{
+	if (FStoreItem* Row = ItemDataTable->FindRow<FStoreItem>(ItemName, TEXT("LockItem")))
+	{
+		Row->bUnlocked = false;  // mark as locked
+		UE_LOG(LogTemp, Log, TEXT("Locked item: %s"), *ItemName.ToString());
+	}
+}
+
+bool UStoreSubsystem::IsItemUnlocked(FName ItemName) const
+{
+	if (const FStoreItem* Row = ItemDataTable->FindRow<FStoreItem>(ItemName, TEXT("IsItemUnlocked")))
+	{
+		return Row->bUnlocked;
+	}
+	return false;
 }

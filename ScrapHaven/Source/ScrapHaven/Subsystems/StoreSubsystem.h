@@ -47,6 +47,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Store")
 	void LogAllShelves() const;
 
+	UFUNCTION(BlueprintCallable, Category="Store")
+	void UnlockItem(FName ItemName);
+
+	UFUNCTION(BlueprintCallable, Category="Store")
+	void LockItem(FName ItemName);
+
+	UFUNCTION(BlueprintCallable, Category="Store")
+	bool IsItemUnlocked(FName ItemName) const;
+
 	// Map: ItemName -> list of shelves that can serve it
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Store")
 	TMap<FName, FShelfList> ItemToShelves;

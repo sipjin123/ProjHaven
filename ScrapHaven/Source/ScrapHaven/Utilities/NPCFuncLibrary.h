@@ -31,14 +31,15 @@ class SCRAPHAVEN_API UNPCFuncLibrary : public UBlueprintFunctionLibrary
 	FString CleanupEnumString(const UEnum* EnumPtr, int64 Value);
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
-	static FShopListData GenerateShoppingList(const FDailyBehaviorProfile& Behavior, const FPOIData& TargetShop);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
 	static FShopListData GenerateShoppingListComplex(const FDailyBehaviorProfile& Behavior, const FPOIData& TargetShop, const TArray<FStoreItem>& AvailableItems);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
-	static TArray<FItemPurchasePair> GenerateSampleInventory(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity);
+	static TArray<FStoreItem> GenerateSampleInventoryv2(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="NPC|Behavior")
-	static TArray<FStoreItem> GenerateSampleInventoryv2(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity);
+	static TArray<FStoreItem> GenerateSampleInventoryFromArray(
+		const TArray<FStoreItem>& AllItems, 
+		int32 NumItems, 
+		int32 MinQuantity, 
+		int32 MaxQuantity);
 };

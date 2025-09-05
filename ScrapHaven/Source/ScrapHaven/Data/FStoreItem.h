@@ -97,6 +97,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
 	TSubclassOf<class AShopItem> ItemActorClass = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Item")
+	bool bUnlocked = true;
+	
 	// --- Helper functions ---
 	bool IsTreat() const { return bIsTreat; }
 	bool IsEssential() const { return bIsEssential; }

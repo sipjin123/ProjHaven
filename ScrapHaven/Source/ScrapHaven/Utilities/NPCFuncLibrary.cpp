@@ -185,88 +185,6 @@ FString UNPCFuncLibrary::CleanupEnumString(const UEnum* EnumPtr, int64 Value)
 	return Nice;
 }
 
-FShopListData UNPCFuncLibrary::GenerateShoppingList(const FDailyBehaviorProfile& Behavior, const FPOIData& TargetShop)
-{
-	FShopListData Result;
-	Result.POIData = TargetShop;
-
-	// Loop through needs and decide items
-	for (const FNeedStatus& NeedStatus : Behavior.Needs)
-	{
-		if (NeedStatus.Intensity <= 0.0f) continue;
-
-		FItemPurchasePair Purchase;
-
-		switch (NeedStatus.Need)
-		{
-		case ENPCNeedType::Hungry:
-			Purchase.ItemName = "Food_Bread";
-			Purchase.Quantity = FMath::RandRange(1, 3);
-			break;
-
-		case ENPCNeedType::Thirsty:
-			Purchase.ItemName = "Drink_Water";
-			Purchase.Quantity = FMath::RandRange(1, 2);
-			break;
-
-		case ENPCNeedType::Tired:
-			Purchase.ItemName = "Item_Coffee";
-			Purchase.Quantity = 1;
-			break;
-
-		default:
-			break;
-		}
-
-		if (!Purchase.ItemName.IsNone())
-		{
-			Result.ShoppingListArray.Add(Purchase);
-		}
-	}
-
-	// Mood influences "extras"
-	switch (Behavior.Mood)
-	{
-	case ENPCMoodType::Cheerful:
-		{
-			FItemPurchasePair Treat;
-			Treat.ItemName = "Food_Cake";
-			Treat.Quantity = 1;
-			Result.ShoppingListArray.Add(Treat);
-			break;
-		}
-	case ENPCMoodType::Curious:
-		{
-			FItemPurchasePair RandomItem;
-			TArray<FName> CuriosityItems = { "Book", "Toy", "Tool" };
-			RandomItem.ItemName = CuriosityItems[FMath::RandHelper(CuriosityItems.Num())];
-			RandomItem.Quantity = 1;
-			Result.ShoppingListArray.Add(RandomItem);
-			break;
-		}
-	case ENPCMoodType::Irritable:
-		{
-			FItemPurchasePair Comfort;
-			Comfort.ItemName = "Snack_Chips";
-			Comfort.Quantity = FMath::RandRange(1, 2);
-			Result.ShoppingListArray.Add(Comfort);
-			break;
-		}
-	case ENPCMoodType::Dissociate:
-		{
-			FItemPurchasePair Simple;
-			Simple.ItemName = "InstantNoodles";
-			Simple.Quantity = 1;
-			Result.ShoppingListArray.Add(Simple);
-			break;
-		}
-	default:
-		break;
-	}
-
-	return Result;
-}
-
 FShopListData UNPCFuncLibrary::GenerateShoppingListComplex(
     const FDailyBehaviorProfile& Behavior,
     const FPOIData& TargetShop,
@@ -389,51 +307,6 @@ FShopListData UNPCFuncLibrary::GenerateShoppingListComplex(
     return ShopData;
 }
 
-TArray<FItemPurchasePair> UNPCFuncLibrary::GenerateSampleInventory(UDataTable* ItemDataTable, int32 NumItems, int32 MinQuantity, int32 MaxQuantity)
-{
-
-	TArray<FItemPurchasePair> Inventory;
-
-	if (!ItemDataTable) 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ItemDataTable is null in UStoreSubsystem!"));
-		return Inventory;
-	}
-
-	// Get all rows from the DataTable
-	static const FString ContextString(TEXT("GenerateRandomInventory"));
-	TArray<FStoreItem*> AllItems;
-	ItemDataTable->GetAllRows(ContextString, AllItems);
-
-	if (AllItems.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No rows in ItemDataTable!"));
-		return Inventory;
-	}
-
-	// Clamp number of items to avoid out-of-range
-	NumItems = FMath::Clamp(NumItems, 1, AllItems.Num());
-
-	// Randomly shuffle and pick items
-	TArray<int32> Indices;
-	for (int32 i = 0; i < AllItems.Num(); i++) { Indices.Add(i); }
-	Indices.Sort([](int32 A, int32 B){ return FMath::RandRange(0,1) == 0; }); // shuffle
-
-	for (int32 i = 0; i < NumItems; i++)
-	{
-		FStoreItem* StoreItem = AllItems[Indices[i]];
-		if (!StoreItem) continue;
-
-		FItemPurchasePair Pair;
-		Pair.ItemName = StoreItem->ItemName;
-		Pair.Quantity = FMath::RandRange(MinQuantity, MaxQuantity);
-
-		Inventory.Add(Pair);
-	}
-
-	return Inventory;
-}
-
 TArray<FStoreItem> UNPCFuncLibrary::GenerateSampleInventoryv2(
 	UDataTable* ItemDataTable, 
 	int32 NumItems, 
@@ -473,6 +346,41 @@ TArray<FStoreItem> UNPCFuncLibrary::GenerateSampleInventoryv2(
 		if (!StoreItem) continue;
 
 		FStoreItem Copy = *StoreItem;
+		Copy.Quantity = FMath::RandRange(MinQuantity, MaxQuantity);
+
+		Inventory.Add(Copy);
+	}
+
+	return Inventory;
+}
+
+TArray<FStoreItem> UNPCFuncLibrary::GenerateSampleInventoryFromArray(
+	const TArray<FStoreItem>& AllItems, 
+	int32 NumItems, 
+	int32 MinQuantity, 
+	int32 MaxQuantity)
+{
+	TArray<FStoreItem> Inventory;
+
+	if (AllItems.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AllItems array is empty in GenerateSampleInventoryFromArray!"));
+		return Inventory;
+	}
+
+	// Clamp number of items
+	NumItems = FMath::Clamp(NumItems, 1, AllItems.Num());
+
+	// Shuffle indices
+	TArray<int32> Indices;
+	for (int32 i = 0; i < AllItems.Num(); i++) { Indices.Add(i); }
+	Indices.Sort([](int32 A, int32 B){ return FMath::RandBool(); });
+
+	for (int32 i = 0; i < NumItems; i++)
+	{
+		const FStoreItem& StoreItem = AllItems[Indices[i]];
+
+		FStoreItem Copy = StoreItem;
 		Copy.Quantity = FMath::RandRange(MinQuantity, MaxQuantity);
 
 		Inventory.Add(Copy);
