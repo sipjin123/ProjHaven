@@ -5,9 +5,19 @@
 #include "CoreMinimal.h"
 #include "Data/FStoreItem.h"
 #include "Engine/DataTable.h"
+#include "Shopping/ShelfSector.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "StoreSubsystem.generated.h"
 
+USTRUCT(BlueprintType)
+struct FShelfList
+{
+	GENERATED_BODY()
+
+	// Use TObjectPtr for reflected UObject references (UE5+).
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<TObjectPtr<AShelfSector>> Shelves;
+};
 /**
  * 
  */
@@ -31,4 +41,13 @@ public:
 	// Lookup by Name
 	UFUNCTION(BlueprintCallable, Category="Store")
 	FStoreItem GetItemByName(FName RowName) const;
+	void RegisterShelf(FName ItemName, AShelfSector* Shelf);
+	AShelfSector* FindShelfWithItem(FName ItemName);
+
+	UFUNCTION(BlueprintCallable, Category="Store")
+	void LogAllShelves() const;
+
+	// Map: ItemName -> list of shelves that can serve it
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Store")
+	TMap<FName, FShelfList> ItemToShelves;
 };

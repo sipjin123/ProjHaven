@@ -19,7 +19,9 @@ void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxCompon
     ShelfSector->StoreItemRefData = StoreItemRef;
     ShelfReference = ShelfBox;
     ItemReference  = ItemBox;
+    ShelfSector->RegisterStoreItem(StoreItemRef);
 
+    UE_LOG(LogTemp, Error, TEXT("❌ INIT SHELF NOW===================================!"));
     // Price assignment
     AssignedPrice = StoreItemRef.BuyPrice;
     BasePrice = AssignedPrice;

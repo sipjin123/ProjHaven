@@ -4,6 +4,7 @@
 #include "Shopping/ShelfSector.h"
 
 #include "ActorComponents/ShelfManagerComponent.h"
+#include "Subsystems/StoreSubsystem.h"
 
 // Sets default values
 AShelfSector::AShelfSector()
@@ -35,5 +36,10 @@ void AShelfSector::InitializeShelf(FVector NewInteractionCoord)
 void AShelfSector::RegisterStoreItem(const FStoreItem& StoreItemRef)
 {
 	StoreItemRefData = StoreItemRef;
+	
+	if (UStoreSubsystem* Store = GetGameInstance()->GetSubsystem<UStoreSubsystem>())
+	{
+		Store->RegisterShelf(StoreItemRef.ItemName, this);
+	}
 }
 
