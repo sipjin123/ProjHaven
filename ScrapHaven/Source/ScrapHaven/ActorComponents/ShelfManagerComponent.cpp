@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Shopping/ShelfSector.h"
 #include "Shopping/ShopItem.h"
+#include "Subsystems/StoreSubsystem.h"
 
 UShelfManagerComponent::UShelfManagerComponent()
 {
@@ -17,6 +18,7 @@ void UShelfManagerComponent::InitializeShelf(UBoxComponent* ShelfBox, UBoxCompon
     if (!ShelfBox || !ItemBox || !ShelfSector) return;
 
     ShelfSector->StoreItemRefData = StoreItemRef;
+    ItemName = StoreItemRef.ItemName;
     ShelfReference = ShelfBox;
     ItemReference  = ItemBox;
     ShelfSector->RegisterStoreItem(StoreItemRef);
@@ -95,6 +97,15 @@ bool UShelfManagerComponent::PlaceItemInNextSlot(AActor* ItemActor)
             Slot.bOccupied = true;
             Slot.OccupyingItem = ItemActor;
             TotalItems++;
+            
+            if (UGameInstance* GI = GetWorld()->GetGameInstance())
+            {
+                if (UStoreSubsystem* Store = GI->GetSubsystem<UStoreSubsystem>())
+                {
+                    Store->AddItemQuantity(ItemName, 1); // call your function
+                }
+            }
+            
             return true;
         }
     }
@@ -108,6 +119,7 @@ void UShelfManagerComponent::ClearShelf()
     {
         Slot.bOccupied = false;
     }
+    ItemName = "";
 }
 
 AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
@@ -123,6 +135,15 @@ AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
             Slot.bOccupied = false;
             Slot.OccupyingItem = nullptr;
             TotalItems--;
+
+            if (UGameInstance* GI = GetWorld()->GetGameInstance())
+            {
+                if (UStoreSubsystem* Store = GI->GetSubsystem<UStoreSubsystem>())
+                {
+                    Store->AddItemQuantity(ItemName, -1); // call your function
+                }
+            }
+            
             return Item; // Caller now owns the item reference
         }
     }
@@ -131,7 +152,7 @@ AActor* UShelfManagerComponent::TakeItem(int32 SlotIndex)
 AActor* UShelfManagerComponent::TakeLastItem()
 {
     for (int32 i = Slots.Num() - 1; i >= 0; --i) // iterate backwards
-        {
+    {
         FItemSlot& Slot = Slots[i];
 
         if (Slot.bOccupied && Slot.OccupyingItem.IsValid())
@@ -145,9 +166,17 @@ AActor* UShelfManagerComponent::TakeLastItem()
             // Decrease item count, but clamp to 0 for safety
             TotalItems = FMath::Max(0, TotalItems - 1);
 
+            if (UGameInstance* GI = GetWorld()->GetGameInstance())
+            {
+                if (UStoreSubsystem* Store = GI->GetSubsystem<UStoreSubsystem>())
+                {
+                    Store->AddItemQuantity(ItemName, -1); // call your function
+                }
+            }
+            
             return Item; // Return the item reference
         }
-        }
+    }
 
     return nullptr; // No items found
 }
@@ -208,6 +237,13 @@ bool UShelfManagerComponent::PlaceStoreItemDataInNextSlot(const FStoreItem& Stor
                 Slot.bOccupied = true;
                 Slot.OccupyingItem = SpawnedItem;
                 TotalItems++;
+                if (UGameInstance* GI = GetWorld()->GetGameInstance())
+                {
+                    if (UStoreSubsystem* Store = GI->GetSubsystem<UStoreSubsystem>())
+                    {
+                        Store->AddItemQuantity(ItemName, 1); // call your function
+                    }
+                }
                 return true;
             }
         }

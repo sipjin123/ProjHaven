@@ -75,6 +75,9 @@ public:
 	}
 
 	UPROPERTY(BlueprintReadWrite)
+	FName ItemName;
+	
+	UPROPERTY(BlueprintReadWrite)
 	int32 TotalItems = 0;
 
 	UPROPERTY(BlueprintReadWrite)
