@@ -42,4 +42,10 @@ class SCRAPHAVEN_API UNPCFuncLibrary : public UBlueprintFunctionLibrary
 		int32 NumItems, 
 		int32 MinQuantity, 
 		int32 MaxQuantity);
+
+	UFUNCTION(BlueprintCallable, Category="NPC")
+	static void DisableNPCBehavior(AActor* NPCActor, const FString Reason);
+	
+	UFUNCTION(BlueprintCallable, Category="NPC")
+	static void ToggleNPCBrain(AActor* NPCActor, bool bPause);
 };

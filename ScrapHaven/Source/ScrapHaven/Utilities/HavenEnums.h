@@ -82,4 +82,6 @@ enum class ENPCType : uint8 {
 	Regulars = 1	UMETA(DisplayName = "Regulars"),
 	Townsfolk  = 2	UMETA(DisplayName = "Townsfolk"),
 	Insider  = 3	UMETA(DisplayName = "Insider"),
+	Outsider  = 4	UMETA(DisplayName = "Outsider"),
+	Roamer  = 5	UMETA(DisplayName = "Roamer"),
 };

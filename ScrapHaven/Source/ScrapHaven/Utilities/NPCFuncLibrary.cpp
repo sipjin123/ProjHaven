@@ -2,8 +2,13 @@
 
 
 #include "Utilities/NPCFuncLibrary.h"
+
+#include "AIController.h"
 #include "HavenEnums.h"
+#include "Components/StateTreeComponent.h"
 #include "Data/FStoreItem.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "NPC/NPCBehaviorGenerator.h"
 #include "NPC/StructData.h"
 
@@ -387,4 +392,74 @@ TArray<FStoreItem> UNPCFuncLibrary::GenerateSampleInventoryFromArray(
 	}
 
 	return Inventory;
+}
+
+void UNPCFuncLibrary::DisableNPCBehavior(AActor* NPCActor, const FString Reason)
+{
+	if (!NPCActor) return;
+
+	// 1) Stop StateTree (if they have one)
+	if (UStateTreeComponent* StateTreeComp = NPCActor->FindComponentByClass<UStateTreeComponent>())
+	{
+		StateTreeComp->StopLogic(Reason);
+		StateTreeComp->SetAutoActivate(false);          // prevent restart
+		StateTreeComp->SetComponentTickEnabled(false);
+		StateTreeComp->Deactivate();
+	}
+
+	// 2) Stop pathfinding/movement
+	if (APawn* Pawn = Cast<APawn>(NPCActor))
+	{
+		if (AAIController* AICon = Cast<AAIController>(Pawn->GetController()))
+		{
+			AICon->StopMovement();
+			AICon->GetBrainComponent()->StopLogic(Reason);
+		}
+
+		if (ACharacter* Character = Cast<ACharacter>(Pawn))
+		{
+			if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
+			{
+				MoveComp->StopMovementImmediately();
+			}
+		}
+	}
+}
+
+void UNPCFuncLibrary::ToggleNPCBrain(AActor* NPCActor, bool bPause)
+{
+	if (!NPCActor) return;
+
+	if (APawn* Pawn = Cast<APawn>(NPCActor))
+	{
+		if (AAIController* AICon = Cast<AAIController>(Pawn->GetController()))
+		{
+			if (UBrainComponent* Brain = AICon->GetBrainComponent())
+			{
+				if (bPause)
+				{
+					// Pauses the brain logic (StateTree / BT stops updating)
+					Brain->PauseLogic(TEXT("Paused by ToggleNPCBrain"));
+					AICon->StopMovement();
+				}
+				else
+				{
+					// Resumes or restarts logic if paused
+					Brain->ResumeLogic(TEXT("Resumed by ToggleNPCBrain"));
+				}
+			}
+		}
+
+		// Safety: kill momentum when pausing
+		if (bPause)
+		{
+			if (ACharacter* Character = Cast<ACharacter>(Pawn))
+			{
+				if (UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement())
+				{
+					MoveComp->StopMovementImmediately();
+				}
+			}
+		}
+	}
 }
