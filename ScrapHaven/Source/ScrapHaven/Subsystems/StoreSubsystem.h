@@ -59,4 +59,19 @@ public:
 	// Map: ItemName -> list of shelves that can serve it
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Store")
 	TMap<FName, FShelfList> ItemToShelves;
+	
+	UFUNCTION(BlueprintCallable, Category="Store")
+	bool AddItemQuantity(FName ItemName, int32 Quantity)
+	{
+		for (FStoreItem& Item : AllItems)
+		{
+			if (Item.ItemName == ItemName)
+			{
+				Item.Quantity += Quantity;
+				return true;
+			}
+		}
+		return false;
+	}
+
 };

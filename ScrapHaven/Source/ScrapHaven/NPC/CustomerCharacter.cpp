@@ -32,3 +32,27 @@ void ACustomerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 }
 
+void ACustomerCharacter::AddToShoppingBasket(FName ItemName, int32 Quantity)
+{
+	if (ItemName.IsNone() || Quantity <= 0)
+	{
+		return;
+	}
+
+	// Look for existing entry
+	for (FItemPurchasePair& Pair : ShoppingBasket)
+	{
+		if (Pair.ItemName == ItemName)
+		{
+			// If item already exists, increase quantity
+			Pair.Quantity += Quantity;
+			return;
+		}
+	}
+
+	// Otherwise, add a new entry
+	FItemPurchasePair NewPair;
+	NewPair.ItemName = ItemName;
+	NewPair.Quantity = Quantity;
+	ShoppingBasket.Add(NewPair);
+}

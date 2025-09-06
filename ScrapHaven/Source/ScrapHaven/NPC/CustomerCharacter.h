@@ -28,6 +28,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	UFUNCTION(BlueprintCallable, Category="Shopping")
+	void AddToShoppingBasket(FName ItemName, int32 Quantity);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
 	FName NpcName;
@@ -40,4 +43,7 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
 	FShopListData ShopListData;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
+	TArray<FItemPurchasePair> ShoppingBasket;
 };
