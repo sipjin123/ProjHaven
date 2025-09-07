@@ -18,6 +18,24 @@ struct FDebugStruct
 };
 
 USTRUCT(BlueprintType)
+struct FPOIBasic
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
+	int32 UniqueId = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
+	EBuildingType BuildingType = EBuildingType::None;
+
+	/** Is the POI data empty? */
+	bool IsEmpty() const
+	{
+		return BuildingType == EBuildingType::None;
+	}
+};
+
+USTRUCT(BlueprintType)
 struct FPOIData
 {
 	GENERATED_BODY()

@@ -7,10 +7,11 @@
 #include "StructData.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/Sociable.h"
+#include "Interfaces/Trackable.h"
 #include "CustomerCharacter.generated.h"
 
 UCLASS()
-class SCRAPHAVEN_API ACustomerCharacter : public ACharacter, public ISociable
+class SCRAPHAVEN_API ACustomerCharacter : public ACharacter, public ISociable, public ITrackable
 {
 	GENERATED_BODY()
 
@@ -46,4 +47,24 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
 	TArray<FItemPurchasePair> ShoppingBasket;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
+	EBuildingType CurrentLocation;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
+	int32 CurrentLocationVariant;
+	
+	virtual FPOIBasic GetPOIBasic_Implementation() override
+	{
+		FPOIBasic Result;
+		Result.BuildingType = CurrentLocation;
+		Result.UniqueId = CurrentLocationVariant;
+		return Result;
+	};
+
+	virtual void AssignNewPOIData_Implementation(FPOIBasic NewPOI) override
+	{
+		CurrentLocation = NewPOI.BuildingType;
+		CurrentLocationVariant = NewPOI.UniqueId;
+	}
 };
