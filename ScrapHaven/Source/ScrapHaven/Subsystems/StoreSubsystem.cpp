@@ -138,3 +138,178 @@ bool UStoreSubsystem::IsItemUnlocked(FName ItemName) const
 	}
 	return false;
 }
+
+bool UStoreSubsystem::PlaceOrder(FName ItemName, int32 Quantity, int32 CurrentDay)
+{
+	if (ItemName.IsNone() || Quantity <= 0)
+	{
+		return false;
+	}
+
+	int32 UsedSlots = GetUsedInventorySlots();
+	int32 FreeSlots = MaxInventorySlots - UsedSlots;
+
+	if (FreeSlots <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Order failed: no space left in inventory."));
+		return false;
+	}
+
+	// Clamp order to free space
+	int32 FinalQuantity = FMath::Min(Quantity, FreeSlots);
+
+	if (FinalQuantity <= 0)
+	{
+		return false;
+	}
+
+	FDeliveryOrder Order;
+	Order.ItemName = ItemName;
+	Order.Quantity = FinalQuantity;
+	Order.DeliveryDay = CurrentDay + 1;
+	PendingOrders.Add(Order);
+
+	UE_LOG(LogTemp, Log, TEXT("Placed order: %d of %s (slots left: %d)"),
+		FinalQuantity, *ItemName.ToString(), FreeSlots - FinalQuantity);
+
+	return true;
+}
+
+void UStoreSubsystem::ProcessDeliveries(int32 CurrentDay)
+{
+	for (int32 i = PendingOrders.Num() - 1; i >= 0; --i)
+	{
+		if (PendingOrders[i].DeliveryDay == CurrentDay)
+		{
+			AddToWarehouseInventory(PendingOrders[i].ItemName, PendingOrders[i].Quantity);
+			PendingOrders.RemoveAt(i);
+		}
+	}
+}
+
+void UStoreSubsystem::AddToWarehouseInventory(FName ItemName, int32 Quantity)
+{
+	if (ItemName.IsNone() || Quantity <= 0) return;
+
+	for (int32 i = 0; i < Quantity; i++)
+	{
+		// Create a new FStoreItem for **each unit**
+		FStoreItem NewItem;
+		NewItem.ItemName = ItemName;
+
+		// Add to warehouse inventory array
+		CurrentWarehouseInventory.Add(NewItem);
+
+		// Add to shelf slot (spawns physical box)
+		bool bAdded = WarehouseShelf->AddItemToSlot(ItemName);
+		if (!bAdded)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No free slot to add item %s"), *ItemName.ToString());
+			break; // stop if shelf is full
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Added item to warehouse: %s"), *ItemName.ToString());
+	}
+}
+
+void UStoreSubsystem::LogStoreStatus() const
+{
+	UE_LOG(LogTemp, Log, TEXT("====== STORE STATUS ======"));
+
+	// Log inventory
+	UE_LOG(LogTemp, Log, TEXT("Current Inventory:"));
+	if (CurrentWarehouseInventory.Num() == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("  [Empty]"));
+	}
+	else
+	{
+		for (const FStoreItem& Item : CurrentWarehouseInventory)
+		{
+			UE_LOG(LogTemp, Log, TEXT("  Item: %s | Quantity: %d"),
+				*Item.ItemName.ToString(),
+				Item.Quantity);
+		}
+	}
+
+	// Log pending orders
+	UE_LOG(LogTemp, Log, TEXT("Pending Orders:"));
+	if (PendingOrders.Num() == 0)
+	{
+		UE_LOG(LogTemp, Log, TEXT("  [None]"));
+	}
+	else
+	{
+		for (const FDeliveryOrder& Order : PendingOrders)
+		{
+			UE_LOG(LogTemp, Log, TEXT("  Item: %s | Quantity: %d | Delivery Day: %d"),
+				*Order.ItemName.ToString(),
+				Order.Quantity,
+				Order.DeliveryDay);
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("=========================="));
+}
+void UStoreSubsystem::AddToInventory(const FName& ItemName, int32 Quantity)
+{
+	if (ItemName.IsNone() || Quantity <= 0) return;
+
+	for (FStoreItem& Item : CurrentWarehouseInventory)
+	{
+		if (Item.ItemName == ItemName)
+		{
+			Item.Quantity += Quantity;
+			return;
+		}
+	}
+
+	// If not found, add new entry
+	FStoreItem NewItem;
+	NewItem.ItemName = ItemName;
+	NewItem.Quantity = Quantity;
+	CurrentWarehouseInventory.Add(NewItem);
+}
+
+void UStoreSubsystem::RemoveFromInventory(const FName& ItemName, int32 Quantity)
+{
+	if (ItemName.IsNone() || Quantity <= 0) return;
+
+	for (int32 i = 0; i < CurrentWarehouseInventory.Num(); i++)
+	{
+		if (CurrentWarehouseInventory[i].ItemName == ItemName)
+		{
+			CurrentWarehouseInventory[i].Quantity -= Quantity;
+			if (CurrentWarehouseInventory[i].Quantity <= 0)
+			{
+				CurrentWarehouseInventory.RemoveAt(i);
+			}
+			return;
+		}
+	}
+}
+
+ASupplyBox* UStoreSubsystem::SpawnItemBox(UWorld* World, const FStoreItem& ItemData, const FTransform& Transform)
+{
+	
+	if (!World || !ItemBoxClass) return nullptr;
+	UE_LOG(LogTemp, Log, TEXT("Try to spawn box order: %s"), *ItemData.ItemName.ToString());
+
+	FActorSpawnParameters SpawnParams;
+	FTransform SpawnTransform = Transform;
+
+	// Deferred spawn
+	ASupplyBox* Box = World->SpawnActorDeferred<ASupplyBox>(ItemBoxClass, SpawnTransform);
+	if (Box)
+	{
+		// Set properties exposed on spawn
+		Box->ItemRowName = ItemData.ItemName;
+		Box->BoxTypeRowName = "Regular"; // optional
+		Box->CachedItem = ItemData;
+
+		// Finish spawn so it calls BeginPlay, etc.
+		Box->FinishSpawning(SpawnTransform);
+	}
+	
+	return Box;
+}

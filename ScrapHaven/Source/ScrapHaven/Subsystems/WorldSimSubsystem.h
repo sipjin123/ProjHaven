@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Utilities/HavenEnums.h"
 #include "WorldSimSubsystem.generated.h"
 
 UCLASS(Abstract, Blueprintable)
@@ -16,23 +17,21 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& collection) override;
 
 public:
-	// Time
-	UPROPERTY(BlueprintReadWrite, Category="Time")
-	int32 CurrentDay = 1;
-
-	UPROPERTY(BlueprintReadWrite, Category="Time")
-	float CurrentTimeOfDay = 6.0f; // hours (0-24)
-
 	UPROPERTY(EditAnywhere, Category="Time")
 	float DayLengthSeconds = 600.0f; // 10 minutes per full day
 
 	// Events
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNewDay);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEndDay);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpecialEvent, FName, EventName);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDayStateChanged, ETimeOfDay, NewState);
 
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnNewDay OnNewDay;
 
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnNewDay FOnEndDay;
+	
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnSpecialEvent OnSpecialEvent;
 
@@ -45,4 +44,30 @@ public:
 private:
 	struct FWorldEvent { int32 Day; float Hour; FName EventName; };
 	TArray<FWorldEvent> ScheduledEvents;
+	
+	bool bIsRunning = false;
+public:
+	
+	// Start the simulation
+	UFUNCTION(BlueprintCallable, Category="World Time")
+	void StartDay(bool bIsNewDay);
+
+	UPROPERTY(BlueprintAssignable, Category="World Time")
+	FOnDayStateChanged OnDayStateChanged;
+
+	// Time
+	UPROPERTY(BlueprintReadWrite, Category="Time")
+	int32 CurrentDay = 1;
+
+	UPROPERTY(BlueprintReadWrite, Category="Time")
+	float CurrentTimeOfDay = 6.0f; // hours (0-24)
+
+	void UpdateDayState();
+	
+	UFUNCTION(BlueprintCallable, Category="World Time")
+	void SkipToNextState();
+
+	// Current state (Morning/Afternoon/Evening)
+	UPROPERTY(BlueprintReadOnly, Category="World Time")
+	ETimeOfDay CurrentDayState = ETimeOfDay::Morning;
 };
