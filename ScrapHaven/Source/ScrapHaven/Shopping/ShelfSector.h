@@ -43,4 +43,18 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Shelf")
 	UShelfManagerComponent* ShelfManager;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Shelf")
+	FTransform GetNPCInteractionRoot() const
+	{
+		if (AShopInteractable* Shelf = ShelfReference())
+		{
+			if (Shelf->NPCInteractionRoot)
+			{
+				return Shelf->NPCInteractionRoot->GetComponentTransform();
+			}
+		}
+
+		return FTransform::Identity;
+	}
 };

@@ -100,3 +100,18 @@ struct FNPCData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
 	EOccupationType OccupationType;
 };
+
+USTRUCT(BlueprintType)
+struct FItemData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName ItemName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Quantity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UTexture2D* Icon;
+};
