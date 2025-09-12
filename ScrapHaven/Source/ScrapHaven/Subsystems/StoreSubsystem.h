@@ -58,6 +58,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Store")
 	FStoreItem GetItemByName(FName RowName) const;
 	void RegisterShelf(FName ItemName, AShelfSector* Shelf);
+	
+	UFUNCTION(BlueprintCallable, Category="Store")
 	AShelfSector* FindShelfWithItem(FName ItemName);
 
 	UFUNCTION(BlueprintCallable, Category="Store")
