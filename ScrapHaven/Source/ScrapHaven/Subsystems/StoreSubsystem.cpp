@@ -139,6 +139,70 @@ bool UStoreSubsystem::IsItemUnlocked(FName ItemName) const
 	return false;
 }
 
+FShelfList UStoreSubsystem::GetRandomShelfList() const
+{
+	if (ItemToShelves.Num() == 0)
+	{
+		return FShelfList();
+	}
+
+	// Collect valid keys (those with at least one shelf that has stock)
+	TArray<FName> ValidKeys;
+	for (const TPair<FName, FShelfList>& Pair : ItemToShelves)
+	{
+		for (AShelfSector* Shelf : Pair.Value.Shelves)
+		{
+			if (Shelf && Shelf->ShelfManager->TotalItems > 0) // assumes HasStock() exists in AShelfSector
+			{
+				ValidKeys.Add(Pair.Key);
+				break; // one shelf with stock is enough to consider this key valid
+			}
+		}
+	}
+
+	if (ValidKeys.Num() == 0)
+	{
+		return FShelfList();
+	}
+
+	// Pick random key
+	int32 RandIndex = FMath::RandRange(0, ValidKeys.Num() - 1);
+	const FName& RandomKey = ValidKeys[RandIndex];
+
+	// Guaranteed to exist
+	return *ItemToShelves.Find(RandomKey);
+}
+
+AShelfSector* UStoreSubsystem::GetRandomShelfWithItem() const
+{
+	if (ItemToShelves.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	// Collect all shelves that have stock
+	TArray<AShelfSector*> ValidShelves;
+	for (const TPair<FName, FShelfList>& Pair : ItemToShelves)
+	{
+		for (AShelfSector* Shelf : Pair.Value.Shelves)
+		{
+			if (Shelf && Shelf->ShelfManager->TotalItems > 0) // your shelf must implement this
+			{
+				ValidShelves.Add(Shelf);
+			}
+		}
+	}
+
+	if (ValidShelves.Num() == 0)
+	{
+		return nullptr;
+	}
+
+	// Pick one at random
+	int32 RandIndex = FMath::RandRange(0, ValidShelves.Num() - 1);
+	return ValidShelves[RandIndex];
+}
+
 bool UStoreSubsystem::PlaceOrder(FName ItemName, int32 Quantity, int32 CurrentDay)
 {
 	if (ItemName.IsNone() || Quantity <= 0)

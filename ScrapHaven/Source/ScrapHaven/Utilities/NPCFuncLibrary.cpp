@@ -222,7 +222,23 @@ FShopListData UNPCFuncLibrary::GenerateShoppingListComplex(
             }
 
             if (EffectValue > 0.f)
-                MatchingItems.Add(Item);
+            {
+            	// Avoid duplicates by checking if ItemName already exists
+            	bool bAlreadyAdded = false;
+            	for (const FStoreItem& Existing : MatchingItems)
+            	{
+            		if (Existing.ItemName == Item.ItemName)
+            		{
+            			bAlreadyAdded = true;
+            			break;
+            		}
+            	}
+
+            	if (!bAlreadyAdded)
+            	{
+            		MatchingItems.Add(Item);
+            	}
+            }
         }
 
         if (MatchingItems.Num() == 0)

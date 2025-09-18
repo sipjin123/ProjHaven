@@ -79,6 +79,12 @@ public:
 	TMap<FName, FShelfList> ItemToShelves;
 	
 	UFUNCTION(BlueprintCallable, Category="Store")
+	FShelfList GetRandomShelfList() const;
+	
+	UFUNCTION(BlueprintCallable, Category="Store")
+	AShelfSector* GetRandomShelfWithItem() const;
+
+	UFUNCTION(BlueprintCallable, Category="Store")
 	bool AddItemQuantity(FName ItemName, int32 Quantity)
 	{
 		for (FStoreItem& Item : AllItems)

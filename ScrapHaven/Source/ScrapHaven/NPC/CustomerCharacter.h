@@ -32,6 +32,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Shopping")
 	void AddToShoppingBasket(FName ItemName, int32 Quantity);
+	
+	// Inside your NPC class
+	UFUNCTION(BlueprintCallable, Category="AI|Behavior")
+	bool ShouldWanderToOtherShelf(const FDailyBehaviorProfile& Profile, float BaseWanderChance);
+	
+	UFUNCTION(BlueprintCallable, Category="AI|Behavior")
+	void OnWanderBuyItem(const FName& ItemName);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Status")
 	FName NpcName;
@@ -53,6 +60,46 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Coord")
 	int32 CurrentLocationVariant;
+	
+	// Max times this NPC is allowed to wander/buy extra items in a day
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Behavior")
+	int32 MaxWanderBuys = 2;
+
+	// Current times NPC already wandered off and bought something
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Behavior")
+	int32 WanderBuysSoFar = 0;
+	
+	UFUNCTION(BlueprintCallable, Category="Shop")
+	bool ContainsItem(const FName& ItemName, const TArray<FItemPurchasePair>& ShoppingListArray) const
+	{
+		for (const FItemPurchasePair& Pair : ShoppingListArray)
+		{
+			if (Pair.ItemName == ItemName)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Shop")
+	bool ContainsItemWithQuantity(const TArray<FItemPurchasePair>& ShoppingListArray) const
+	{
+		for (const FItemPurchasePair& Pair : ShoppingListArray)
+		{
+			if (Pair.Quantity > 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Behavior")
+	bool CanWanderBuy() const
+	{
+		return WanderBuysSoFar < MaxWanderBuys;
+	}
 	
 	virtual FPOIBasic GetPOIBasic_Implementation() override
 	{
